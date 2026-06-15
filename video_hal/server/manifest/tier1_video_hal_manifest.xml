@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+    manifest  :マニフェスト
+      マニフェストファイルに必須のタグ。常に一つだけ記載すること。
+      以下の属性についても必ず記載すること。
+        version         :マニフェスト自体のバージョン番号、変更不要
+        packageVersion  :パッケージのバージョン番号
+        domain          :パッケージの所属ドメイン
+        block           :パッケージの所属ブロック
+        layer           :パッケージの所属レイヤ
+        package         :マニフェスト所有者のパッケージ名
+      マニフェストファイルのバージョンは常に以下の書式とする。
+        [メジャーバージョン上位][メジャーバージョン下位][マイナーバージョン][リリースバージョン]
+        []内が一つの16進数値。メジャーバージョン上位は省略可能。
+        例："100" = メジャーバージョン=1, マイナーバージョン=0, リリースバージョン=0
+-->
+<manifest
+	version="100"
+	packageVersion="100"
+	domain="enter"
+	block="general"
+	layer="hal_if"
+	package="video_hal_svc">
+
+	<!--
+        dependentPackages  :依存パッケージ情報
+          自パッケージが依存するパッケージ名、バージョンを記述する。
+          パッケージ名については予約名称一覧を参照。
+          必須タグではないため、依存関係がある場合のみ記述すること。
+          複数の依存が存在する場合、dependentPackageを複数個記述すること。
+          nameタグは必須だが、versionタグは任意。
+          例：
+          <dependentPackages>
+            <dependentPackage name="dep1" version="100" />
+            <dependentPackage name="dep2" />
+          </dependentPackages>
+	-->
+
+	<!--
+        primarySubEndpoint  :パッケージ内ローカル通信端点名(プライマリ)
+          自パッケージが使用する通信端点名をnameに記述する。
+          プライマリは必須設定タグである。必ず設定すること。
+	-->
+	<primarySubEndpoint name="main"/>
+
+	<!--
+        otherSubEndpoints  :パッケージ内ローカル通信端点名(その他)
+          自パッケージが使用する通信端点名をnameに記述する。
+          その他通信端点は任意設定タグである。複数個の通信端点が必要な
+          場合に、プライマリの次に設定していくこと。
+          otherSubEndpoints内にotherSubEndpointを複数記述することができる。
+          62個まで設定可能。
+	-->
+	<otherSubEndpoints>
+		<otherSubEndpoint name="sysdb"/>
+		<otherSubEndpoint name="evmng"/>
+	</otherSubEndpoints>
+
+	<!--
+        deliveryRequestEvents  :イベント配信要求定義
+          自パッケージが持つ通信端点へのイベント配信を設定する。
+          subEndpointNameに指定した端点へ、dbPathに指定したイベントを通知する
+          設定したイベント配信要求定義は静的なイベント配信設定として、
+          システム起動時から終了時まで配信され続ける。
+          複数のイベントを設定したい場合は、deliveryRequestEventタグを複数個記述すること。
+          複数の通信端点に分けてイベント配信したい場合は、deliveryRequestEventsタグを複数個記述すること。
+          例：
+          <deliveryRequestEvents subEndpointName="sep1">
+            <deliveryRequestEvent dbPath="/db/test/test1.dbf"/>
+            <deliveryRequestEvent dbPath="/db/test/test2.dbf"/>
+          </deliveryRequestEvents>
+          <deliveryRequestEvents subEndpointName="sep2">
+            <deliveryRequestEvent dbPath="/db/test/test3.dbf"/>
+          </deliveryRequestEvents>
+	-->
+	<deliveryRequestEvents subEndpointName="evmng">
+		<deliveryRequestEvent dbPath="/db/sys_info/power/vm_str_change_status.dbf"/>
+	</deliveryRequestEvents>
+
+	<!--
+        reserveRequestEvents ：イベント保留定義
+          以下の条件を満たすことにより、イベント保留機能を有効にする。
+            ・reserveRequestEventsタグの属性validに"true"を設定する。
+            ・システムDBの以下のパスにパッケージ名(manifestタグのpackage属性)と
+              ファイル名が一致するファイルを作成する。
+                /db/sys_info/service/
+          イベント保留機能有効時、上記ファイルの内容に対応して以下の動作となる。
+            ・DAT_CNV_SERVICE_NONE    ：イベント配信を行わない
+            ・DAT_CNV_SERVICE_STOP    ：イベントを保留する
+            ・DAT_CNV_SERVICE_READY   ：イベントを保留する
+            ・DAT_CNV_SERVICE_RESTART ：イベントを保留する
+            ・DAT_CNV_SERVICE_RUNNING ：イベントを配信する
+            ・DAT_CNV_SERVICE_SUSPEND ：イベントを保留する
+          イベント保留中にDAT_CNV_SERVICE_RUNNINGに書き換わると、保留イベントを配信する。
+          任意タグのため、保留機能を有効としない場合は削除してよい。
+    -->
+	<reserveRequestEvents valid="true"/>
+
+	<!--
+        attributes  :属性定義
+          サービス/アプリケーション固有の属性を定義する。
+          typeにはサービスの場合"service"を、アプリケーションの場合"app"を指定する。
+          attributeタグを複数個作成し属性を定義するが、設定可能な属性名称については未定。
+          dataUpdateEventに名称を記述することで、プロパティ管理部にて公開するデータ名を指定できる。
+	-->
+	<attributes type="">
+		<attribute name="" value=""/>
+		<dataUpdateEvent propertyName=""/>
+	</attributes>
+
+	<!-- バックアップ定義情報 -->
+	<backup>
+		<data file="color_adjust_param"  size="164" type="sdemmc" mirror="off" timing="user" clear="off" importance="low" repro_clear="off" complete_erasure="false"/>
+		<data file="hdcp_auth_key_cdisp" size="256" type="sdemmc" mirror="off" timing="user" clear="off" importance="low" repro_clear="off" complete_erasure="false"/>
+		<data file="hdcp_auth_key_rse"   size="256" type="sdemmc" mirror="off" timing="user" clear="off" importance="low" repro_clear="off" complete_erasure="false"/>
+	</backup>
+
+	<!--
+        specificInformation  :固有情報
+          タグ内に文字列形式で、「名称=値」をカンマ区切りで複数記述する設定値。
+          パッケージ設計者が名称を決め、製品にあわせて値を変化させる。
+          固有情報に記述した値はPFが提供するAPIを使用して取得することができる。 (API未定)
+          specificInformationは任意タグのため、不要な場合は記述不要。
+	-->
+	<specificInformation>specific info.</specificInformation>
+</manifest>

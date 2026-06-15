@@ -1,0 +1,5 @@
+add_subdirectory(test_ccm)
+#add_subdirectory(test_drm)
+#add_subdirectory(test_hal)
+#add_subdirectory(test_ls3ctl)
+add_subdirectory(test_qcarcam)
