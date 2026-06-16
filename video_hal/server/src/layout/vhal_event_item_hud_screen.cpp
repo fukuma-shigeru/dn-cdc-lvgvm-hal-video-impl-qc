@@ -46,9 +46,9 @@ namespace
 		}
 		else
 		{
-			const uint16_t low_byte{static_cast<uint16_t>(data[parse_index])};
+			const uint8_t low_byte{data[parse_index]};
 			++parse_index;
-			const uint16_t high_byte{static_cast<uint16_t>(data[parse_index])};
+			const uint8_t high_byte{data[parse_index]};
 			++parse_index;
 			const uint32_t assembled{static_cast<uint32_t>(low_byte) |
 				(static_cast<uint32_t>(high_byte) << 8U)};

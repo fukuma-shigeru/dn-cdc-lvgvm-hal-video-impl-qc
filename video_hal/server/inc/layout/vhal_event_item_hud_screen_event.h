@@ -22,7 +22,7 @@ namespace videohal
 class CVhalHudScreenReceiver : public CVhalMiconReceiveItem {
 public:
 	CVhalHudScreenReceiver(void) noexcept;
-	~CVhalHudScreenReceiver(void) noexcept  = default;
+	~CVhalHudScreenReceiver(void) noexcept override = default;
 	CVhalHudScreenReceiver(const CVhalHudScreenReceiver& src) = delete;
 	CVhalHudScreenReceiver& operator=(const CVhalHudScreenReceiver& src) & = delete;
 	CVhalHudScreenReceiver(CVhalHudScreenReceiver&& src) = delete;
