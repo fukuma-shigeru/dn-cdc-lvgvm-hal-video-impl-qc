@@ -18,7 +18,7 @@ namespace videohal
 class CVhalHudScreenController {
 public:
 	CVhalHudScreenController(void) noexcept;
-	~CVhalHudScreenController(void) noexcept;
+	~CVhalHudScreenController(void) noexcept = default;
 	CVhalHudScreenController(const CVhalHudScreenController& src) = delete;
 	CVhalHudScreenController& operator=(const CVhalHudScreenController& src) & = delete;
 	CVhalHudScreenController(CVhalHudScreenController&& src) = delete;
@@ -36,24 +36,24 @@ public:
 
 	/* QNXからのHUD制御関連設定 */
 	/* HUD機能有無判定結果設定 */
-	void ApplyHudFunctionStatus(const bool hud_func) noexcept;
+	void ApplyHudFunctionStatus(const bool func) noexcept;
 	/* HUD歪み補正パラメータ設定 */
-	void ApplyHudDistortionCorrection(const wlrenderer::HudDistortionCorrection& corrections, const bool black_screen_req) noexcept;
+	void ApplyHudDistortionCorrection(const wlrenderer::HudDistortionCorrection& corrections, const bool black) noexcept;
 	/* HUD回転パラメータ設定 */
-	void ApplyHudRotation(const uint16_t hud_rot_deg) noexcept;
+	void ApplyHudRotation(const uint16_t rot_deg) noexcept;
 
 private:
-	CVhalLayoutManager* p_layout_mng_;
-	wlrenderer::CWaylandRenderer* p_renderer_;
+	CVhalLayoutManager* p_layout_{nullptr};
+	wlrenderer::CWaylandRenderer* p_renderer_{nullptr};
 
 	/* HUD機能有無判定結果 */
-	bool hud_func_;
+	bool hud_func_{false};
 	/* HUD黒画入力要求フラグ (false:HUD黒画要求無し / true:HUD黒画要求有り) */
-	bool black_screen_req_;
+	bool black_screen_req_{true};
 	/* HUDスクリーン有効判定結果 */
-	bool hud_screen_available_;
+	bool hud_screen_available_{false};
 	/* HUD MUTEサーフェス有効判定結果 */
-	bool hud_mute_surface_available_;
+	bool hud_mute_surface_available_{false};
 
 	/* HUD歪み補正パラメータ保持用構造体 */
 	class HudCorrectionsState {
@@ -112,8 +112,8 @@ private:
 	HudRotationState hud_rotation_;
 
 	/* HUDパラメータ設定エラーログは初回のみ出力する */
-	bool set_distortion_log_once_;
-	bool set_rotation_log_once_;
+	bool set_distortion_log_once_{false};
+	bool set_rotation_log_once_{false};
 
 	/* HUD MUTEディスプレイサーフェス有効判定 */
 	bool IsHudMuteDisplaySurfaceEnabled(void) noexcept;
