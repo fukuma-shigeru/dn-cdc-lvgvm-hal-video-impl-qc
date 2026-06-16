@@ -12,36 +12,12 @@
 namespace videohal
 {
 
-namespace
-{
-/* HUD機能有無判定結果 */
-enum class HudFunctionStatus : uint8_t {
-	no_func = 0x00U,
-	func = 0x01U,
-};
-
-/* HUD黒画表示要求 */
-enum class HudBlackRequest : uint8_t {
-	no_black = 0x00U,
-	black = 0x01U,
-};
-} /* anonymous namespace */
-
 /*****************************************************************************
  処理概要：	コンストラクタ
  引数    ：	なし
  戻り値  ：	なし
 *****************************************************************************/
 CVhalHudScreenReceiver::CVhalHudScreenReceiver(void) noexcept
-{
-}
-
-/*****************************************************************************
- 処理概要：	デストラクタ
- 引数    ：	なし
- 戻り値  ：	なし
-*****************************************************************************/
-CVhalHudScreenReceiver::~CVhalHudScreenReceiver(void) noexcept
 {
 }
 
@@ -170,26 +146,32 @@ void CVhalHudScreenReceiver::NotifyHudFunctionStatus(const std::vector<uint8_t>&
 {
 	VHAL_LOGV_IN();
 
+	/* この関数内のみで使用するため可視範囲を最小化 */
+	enum class HudFunctionStatus : uint8_t {
+		no_func = 0x00U,
+		func = 0x01U,
+	};
+
 	if (nullptr != p_hud_screen_controller_)
 	{
 		/* 受信データサイズの確認 */
-		if ((hud_func_st_size_ + 1U) == data.size()) 
+		if ((hud_func_st_size_ + 1U) == data.size() && data.size() >= 2U) 
 		{
 			/* HUD機能有無判定結果(0：機能無 1：機能有) */
-			const HudFunctionStatus hud_func{static_cast<HudFunctionStatus>(data[1])};
-			switch (hud_func)
+			const uint8_t hud_func_raw{data[1U]};
+			switch (hud_func_raw)
 			{
 				/* 機能有り */
-				case HudFunctionStatus::func:
+				case static_cast<uint8_t>(HudFunctionStatus::func):
 					p_hud_screen_controller_->ApplyHudFunctionStatus(true);
 					break;
 				/* 機能無し */
-				case HudFunctionStatus::no_func:
+				case static_cast<uint8_t>(HudFunctionStatus::no_func):
 					p_hud_screen_controller_->ApplyHudFunctionStatus(false);
 					break;
 				/* データ内容が不正の場合はHUD機能無とする */
 				default:
-					VHAL_LOGE("unknown HUD function status. value=0x%02X", static_cast<u_int32_t>(hud_func));
+					VHAL_LOGE("unknown HUD function status. value=0x%02X", static_cast<uint32_t>(hud_func_raw));
 					p_hud_screen_controller_->ApplyHudFunctionStatus(false);
 					break;
 			}
@@ -219,43 +201,56 @@ void CVhalHudScreenReceiver::NotifyHudDistortionCorrection(const std::vector<uin
 {
 	VHAL_LOGV_IN();
 
+	/* この関数内のみで使用するため可視範囲を最小化 */
+	enum class HudBlackRequest : uint8_t {
+		no_black = 0x00U,
+		black = 0x01U,
+	};
+
 	if (nullptr != p_hud_screen_controller_)
 	{
 		/* 受信データサイズの確認 */
 		if ((hud_distortion_correct_size_ + 1U) == data.size())
 		{
-			const HudBlackRequest black_screen_req{static_cast<HudBlackRequest>(data[black_pos_])};	/* 黒画表示要求の設定 */
-
+			const uint8_t black_screen_req_raw{data[black_pos_]};
 			/* 黒画表示要求なしの場合 */
-			if (HudBlackRequest::no_black == black_screen_req)
+			if (static_cast<uint8_t>(HudBlackRequest::no_black) == black_screen_req_raw)
 			{
 				wlrenderer::HudDistortionCorrection corrections{};
 				size_t parse_index{1U};	/* データは opcode の次（index 1）から開始 */
-				const size_t payload_end{black_pos_};
+				constexpr size_t payload_end{black_pos_};
 
 				/* 8bitデータの読み込み(境界チェックあり)ラムダ式 */
-				auto read_u8 = [&data, &parse_index, payload_end](uint8_t& out) noexcept -> bool
+				const auto read_u8{[&data, &parse_index, payload_end](uint8_t& out) noexcept -> bool
 				{
+					bool ret{true};
 					if (parse_index >= payload_end)
 					{
-						return false;
+						ret = false;
 					}
-					out = data[parse_index];
-					++parse_index;
-					return true;
-				};
+					else
+					{
+						out = data[parse_index];
+						++parse_index;
+					}
+					return ret;
+				}};
 				/* 16bitデータの読み込み(境界チェックあり)ラムダ式 */
-				auto read_le16 = [&data, &parse_index, payload_end](uint16_t& out) noexcept -> bool
+				const auto read_le16{[&data, &parse_index, payload_end](uint16_t& out) noexcept -> bool
 				{
+					bool ret{true};
 					if ((parse_index + 1U) >= payload_end)
 					{
-						return false;
+						ret = false;
 					}
-					out = static_cast<uint16_t>(static_cast<uint16_t>(data[parse_index]) |
-						(static_cast<uint16_t>(data[parse_index + 1U]) << 8U));
-					parse_index += 2U;
-					return true;
-				};
+					else
+					{
+						out = static_cast<uint16_t>(static_cast<uint16_t>(data[parse_index]) |
+							(static_cast<uint16_t>(data[parse_index + 1U]) << 8U));
+						parse_index += 2U;
+					}
+					return ret;
+				}};
 
 				if ((false == read_u8(corrections.gv_sys_hud_type)) ||			/* HUDタイプ */
 					(false == read_u8(corrections.gv_sys_hud_size)) ||			/* HUDサイズ */
@@ -273,25 +268,25 @@ void CVhalHudScreenReceiver::NotifyHudDistortionCorrection(const std::vector<uin
 				else
 				{
 					/* 16bitデータのLOOP読み込み(境界チェックあり)ラムダ式 */
-					auto read_coord_array = [&read_le16](auto& dest, const char* const label) noexcept -> bool
+					const auto read_coord_array{[&read_le16](auto& dest, const char* const label) noexcept -> bool
 					{
+						bool ret{true};
 						for (size_t i{0U}; i < wlrenderer::kHudCoordinates; ++i)
 						{
 							if (false == read_le16(dest[i]))
 							{
 								VHAL_LOGE("invalid %s data. idx=%zu", label, i);
-								return false;
+								ret = false;
 							}
 						}
-						return true;
-					};
+						return ret;
+					}};
 
-					const bool basept_x_ok{read_coord_array(corrections.gv_vipos_basept_x, "basept_x")};	/* 画像標準値 x座標 point 1～15 */
-					const bool basept_y_ok{read_coord_array(corrections.gv_vipos_basept_y, "basept_y")};	/* 画像標準値 y座標 point 1～15 */
-					const bool adjpt_x_ok{read_coord_array(corrections.gv_vipos_adjpt_x, "adjpt_x")};		/* 画像補正値 x座標 point 1～15 */
-					const bool adjpt_y_ok{read_coord_array(corrections.gv_vipos_adjpt_y, "adjpt_y")};		/* 画像補正値 y座標 point 1～15 */
-
-					if ((true == basept_x_ok) && (true == basept_y_ok) && (true == adjpt_x_ok) && (true == adjpt_y_ok) && (parse_index == payload_end))
+					if (read_coord_array(corrections.gv_vipos_basept_x, "basept_x") &&		/* 画像標準値 x座標 point 1～15 */
+						read_coord_array(corrections.gv_vipos_basept_y, "basept_y") &&		/* 画像標準値 y座標 point 1～15 */
+						read_coord_array(corrections.gv_vipos_adjpt_x, "adjpt_x") &&		/* 画像補正値 x座標 point 1～15 */
+						read_coord_array(corrections.gv_vipos_adjpt_y, "adjpt_y") &&		/* 画像補正値 y座標 point 1～15 */
+						(parse_index == payload_end))
 					{
 						/* HUD歪み補正パラメータ設定 */
 						p_hud_screen_controller_->ApplyHudDistortionCorrection(corrections, false);
@@ -304,7 +299,7 @@ void CVhalHudScreenReceiver::NotifyHudDistortionCorrection(const std::vector<uin
 				}
 			}
 			/* 黒画表示要求ありの場合 */
-			else if (HudBlackRequest::black == black_screen_req)
+			else if (static_cast<uint8_t>(HudBlackRequest::black) == black_screen_req_raw)
 			{
 				wlrenderer::HudDistortionCorrection corrections{};
 				p_hud_screen_controller_->ApplyHudDistortionCorrection(corrections, true);
@@ -312,7 +307,7 @@ void CVhalHudScreenReceiver::NotifyHudDistortionCorrection(const std::vector<uin
 			/* 無効値の場合はHUD黒画要求を有効にする */
 			else
 			{
-				VHAL_LOGE("unknown black_screen_req. black_screen_req=0x%02X", static_cast<unsigned int>(black_screen_req));
+				VHAL_LOGE("unknown black_screen_req. black_screen_req=0x%02X", static_cast<u_int32_t>(black_screen_req_raw));
 				wlrenderer::HudDistortionCorrection corrections{};
 				p_hud_screen_controller_->ApplyHudDistortionCorrection(corrections, true);
 			}
@@ -348,7 +343,7 @@ void CVhalHudScreenReceiver::NotifyHudRotation(const std::vector<uint8_t>& data)
 		{
 			const uint16_t hud_rot_deg{static_cast<uint16_t>(
 				static_cast<uint16_t>(data[1]) |
-				static_cast<uint16_t>(static_cast<uint16_t>(data[2]) << 8))};	/* HUD回転角度(単位:Deg LSB:0.01) */
+				static_cast<uint16_t>(static_cast<uint16_t>(data[2]) << 8U))};	/* HUD回転角度(単位:Deg LSB:0.01) */
 			p_hud_screen_controller_->ApplyHudRotation(hud_rot_deg);
 		}
 		/* データサイズエラーの場合は通知を破棄 */
