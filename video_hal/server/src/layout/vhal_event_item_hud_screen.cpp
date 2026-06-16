@@ -18,17 +18,19 @@ namespace
 	bool ReadU8WithBoundary(const std::vector<uint8_t>& data, size_t& parse_index,
 		const size_t payload_end, uint8_t& out) noexcept
 	{
+		const size_t data_size{static_cast<size_t>(data.size())};
 		bool ret{true};
 
-		if ((parse_index >= payload_end) ||
-			(parse_index >= static_cast<size_t>(data.size())))
-		{
-			ret = false;
-		}
-		else
+		if ((payload_end <= data_size) &&
+			(parse_index < payload_end) &&
+			(parse_index < data_size))
 		{
 			out = static_cast<uint8_t>(data[parse_index]);
 			++parse_index;
+		}
+		else
+		{
+			ret = false;
 		}
 		return ret;
 	}
@@ -36,23 +38,24 @@ namespace
 	bool ReadLe16WithBoundary(const std::vector<uint8_t>& data, size_t& parse_index,
 		const size_t payload_end, uint16_t& out) noexcept
 	{
+		const size_t data_size{static_cast<size_t>(data.size())};
 		bool ret{true};
 
-		if ((parse_index >= payload_end) ||
-			((payload_end - parse_index) < 2U) ||
-			((static_cast<size_t>(data.size()) - parse_index) < 2U))
+		if ((payload_end <= data_size) &&
+			(2U <= (payload_end - parse_index)) &&
+			(parse_index < data_size))
 		{
-			ret = false;
-		}
-		else
-		{
-			const uint8_t low_byte{data[parse_index]};
+			const uint8_t low_byte{static_cast<uint8_t>(data[parse_index])};
 			++parse_index;
-			const uint8_t high_byte{data[parse_index]};
+			const uint8_t high_byte{static_cast<uint8_t>(data[parse_index])};
 			++parse_index;
 			const uint32_t assembled{static_cast<uint32_t>(low_byte) |
 				(static_cast<uint32_t>(high_byte) << 8U)};
 			out = static_cast<uint16_t>(assembled);
+		}
+		else
+		{
+			ret = false;
 		}
 		return ret;
 	}
