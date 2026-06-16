@@ -28,7 +28,8 @@ namespace
 		const size_t payload_end, uint8_t& out) noexcept
 	{
 		bool ret{true};
-		if ((parse_index >= payload_end) || (parse_index >= static_cast<size_t>(data.size())))
+		if ((parse_index >= payload_end) ||
+			(parse_index >= static_cast<size_t>(data.size())))
 		{
 			ret = false;
 		}
@@ -44,15 +45,20 @@ namespace
 		const size_t payload_end, uint16_t& out) noexcept
 	{
 		bool ret{true};
-		if (((parse_index + 1U) >= payload_end) || (parse_index >= static_cast<size_t>(data.size())))
+		if ((parse_index >= payload_end) ||
+			((payload_end - parse_index) < 2U) ||
+			(parse_index >= static_cast<size_t>(data.size())) ||
+			((static_cast<size_t>(data.size()) - parse_index) < 2U))
 		{
 			ret = false;
 		}
 		else
 		{
-			out = static_cast<uint16_t>(static_cast<uint16_t>(data[parse_index]) |
-				(static_cast<uint16_t>(data[parse_index + 1U]) << 8U));
-			parse_index += 2U;
+			const uint16_t low_byte{static_cast<uint16_t>(data[parse_index])};
+			++parse_index;
+			const uint16_t high_byte{static_cast<uint16_t>(data[parse_index])};
+			++parse_index;
+			out = static_cast<uint16_t>(low_byte | (high_byte << 8U));
 		}
 		return ret;
 	}
@@ -276,9 +282,9 @@ void CVhalHudScreenReceiver::NotifyHudDistortionCorrection(const std::vector<uin
 					(false == ReadU8WithBoundary(data, parse_index, payload_end, corrections.gv_sys_hud_size)) ||			/* HUDサイズ */
 					(false == ReadU8WithBoundary(data, parse_index, payload_end, corrections.gv_vipos_direction)) ||		/* 描画方向(意匠向き) */
 					(false == ReadLe16WithBoundary(data, parse_index, payload_end, corrections.gv_vipos_resl_height)) ||	/* HUDTFT解像度 縦 */
-					(false == ReadLe16WithBoundary(data, parse_index, payload_end, corrections.gv_vipos_resl_width)) ||	/* HUDTFT解像度 横 */
-					(false == ReadLe16WithBoundary(data, parse_index, payload_end, corrections.gv_vipos_base_x)) ||		/* HUDTFT有効エリア 基準点x */
-					(false == ReadLe16WithBoundary(data, parse_index, payload_end, corrections.gv_vipos_base_y)) ||		/* HUDTFT有効エリア 基準点y */
+					(false == ReadLe16WithBoundary(data, parse_index, payload_end, corrections.gv_vipos_resl_width)) ||		/* HUDTFT解像度 横 */
+					(false == ReadLe16WithBoundary(data, parse_index, payload_end, corrections.gv_vipos_base_x)) ||			/* HUDTFT有効エリア 基準点x */
+					(false == ReadLe16WithBoundary(data, parse_index, payload_end, corrections.gv_vipos_base_y)) ||			/* HUDTFT有効エリア 基準点y */
 					(false == ReadLe16WithBoundary(data, parse_index, payload_end, corrections.gv_vipos_avail_height)) ||	/* HUDTFT有効エリア 縦 */
 					(false == ReadLe16WithBoundary(data, parse_index, payload_end, corrections.gv_vipos_avail_width)))		/* HUDTFT有効エリア 横*/
 				{
@@ -287,8 +293,8 @@ void CVhalHudScreenReceiver::NotifyHudDistortionCorrection(const std::vector<uin
 				}
 				else
 				{
-					if (ReadCoordArrayWithBoundary(data, parse_index, payload_end, corrections.gv_vipos_basept_x.data(), wlrenderer::kHudCoordinates, "basept_x") &&		/* 画像標準値 x座標 point 1～15 */
-						ReadCoordArrayWithBoundary(data, parse_index, payload_end, corrections.gv_vipos_basept_y.data(), wlrenderer::kHudCoordinates, "basept_y") &&		/* 画像標準値 y座標 point 1～15 */
+					if (ReadCoordArrayWithBoundary(data, parse_index, payload_end, corrections.gv_vipos_basept_x.data(), wlrenderer::kHudCoordinates, "basept_x") &&	/* 画像標準値 x座標 point 1～15 */
+						ReadCoordArrayWithBoundary(data, parse_index, payload_end, corrections.gv_vipos_basept_y.data(), wlrenderer::kHudCoordinates, "basept_y") &&	/* 画像標準値 y座標 point 1～15 */
 						ReadCoordArrayWithBoundary(data, parse_index, payload_end, corrections.gv_vipos_adjpt_x.data(), wlrenderer::kHudCoordinates, "adjpt_x") &&		/* 画像補正値 x座標 point 1～15 */
 						ReadCoordArrayWithBoundary(data, parse_index, payload_end, corrections.gv_vipos_adjpt_y.data(), wlrenderer::kHudCoordinates, "adjpt_y") &&		/* 画像補正値 y座標 point 1～15 */
 						(parse_index == payload_end))
