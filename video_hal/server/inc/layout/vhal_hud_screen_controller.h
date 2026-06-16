@@ -88,7 +88,7 @@ private:
 	public:
 		void ClearRotation(void) noexcept
 		{
-			value = 0;
+			value = 0U;
 			valid = false;
 		}
 		void SetRotation(const uint16_t hud_rot_deg) noexcept

@@ -161,20 +161,20 @@ void CVhalHudScreenReceiver::NotifyHudFunctionStatus(const std::vector<uint8_t>&
 		if ((hud_func_st_size_ + 1U) == data.size()) 
 		{
 			/* HUD機能有無判定結果(0：機能無 1：機能有) */
-			const sys_hud_func hud_func{static_cast<sys_hud_func>(data[1])};
+			const HudFunctionStatus hud_func{static_cast<HudFunctionStatus>(data[1])};
 			switch (hud_func)
 			{
 				/* 機能有り */
-				case sys_hud_func::func:
+				case HudFunctionStatus::func:
 					p_hud_screen_controller_->ApplyHudFunctionStatus(true);
 					break;
 				/* 機能無し */
-				case sys_hud_func::no_func:
+				case HudFunctionStatus::no_func:
 					p_hud_screen_controller_->ApplyHudFunctionStatus(false);
 					break;
 				/* データ内容が不正の場合はHUD機能無とする */
 				default:
-					VHAL_LOGE("unknown sys_hud_func. sys_hud_func=0x%02X", static_cast<u_int32_t>(hud_func));
+					VHAL_LOGE("unknown HUD function status. value=0x%02X", static_cast<u_int32_t>(hud_func));
 					p_hud_screen_controller_->ApplyHudFunctionStatus(false);
 					break;
 			}
@@ -209,10 +209,10 @@ void CVhalHudScreenReceiver::NotifyHudDistortionCorrection(const std::vector<uin
 		/* 受信データサイズの確認 */
 		if ((hud_distortion_correct_size_ + 1U) == data.size())
 		{
-			const sys_hud_black_req black_screen_req{static_cast<sys_hud_black_req>(data[black_pos_])};	/* 黒画表示要求の設定 */
+			const HudBlackRequest black_screen_req{static_cast<HudBlackRequest>(data[black_pos_])};	/* 黒画表示要求の設定 */
 
 			/* 黒画表示要求なしの場合 */
-			if (sys_hud_black_req::no_black == black_screen_req)
+			if (HudBlackRequest::no_black == black_screen_req)
 			{
 				wlrenderer::HudDistortionCorrection corrections{};
 				size_t parse_index{1U};	/* データは opcode の次（index 1）から開始 */
@@ -289,7 +289,7 @@ void CVhalHudScreenReceiver::NotifyHudDistortionCorrection(const std::vector<uin
 				}
 			}
 			/* 黒画表示要求ありの場合 */
-			else if (sys_hud_black_req::black == black_screen_req)
+			else if (HudBlackRequest::black == black_screen_req)
 			{
 				wlrenderer::HudDistortionCorrection corrections{};
 				p_hud_screen_controller_->ApplyHudDistortionCorrection(corrections, true);
