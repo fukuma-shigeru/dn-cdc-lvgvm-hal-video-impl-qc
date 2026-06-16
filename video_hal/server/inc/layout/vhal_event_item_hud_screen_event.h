@@ -14,6 +14,17 @@
 
 namespace videohal
 {
+
+/* HUD機能有無判定結果 */
+enum class sys_hud_func : uint8_t {
+	no_func	= 0x00U,	/* 機能無 */
+	func	= 0x01U,	/* 機能有 */
+};
+enum class sys_hud_black_req : uint8_t {
+	no_black	= 0x00U,	/* 黒画表示要求なし（HUD通常表示） */
+	black		= 0x01U,	/* 黒画表示要求あり（HUD黒画表示） */
+};
+
 /*****************************************************************************
  クラス名称：CVhalHudScreenReceiver
  処理概要  ：スクリーンショット応答通信イベントクラス
@@ -40,12 +51,12 @@ public:
 
 private:
 	static constexpr size_t 	kRecvDataOpc_{0U};					/* 通知データのサブタイプ位置 */
-	static constexpr size_t 	black_pos_{136};					/* 黒画表示要求のデータ位置 */
-	static constexpr size_t		hud_func_st_size_{2};				/* HUD機能有無判定結果通知のデータサイズ */
-	static constexpr size_t		hud_distortion_correct_size_{137};	/* HUD歪み補正パラメータ通知のデータサイズ */
-	static constexpr size_t		hud_rotation_size_{3};				/* HUD回転パラメータ通知のデータサイズ */
+	static constexpr size_t 	black_pos_{136U};					/* 黒画表示要求のデータ位置 */
+	static constexpr size_t		hud_func_st_size_{2U};				/* HUD機能有無判定結果通知のデータサイズ */
+	static constexpr size_t		hud_distortion_correct_size_{137U};	/* HUD歪み補正パラメータ通知のデータサイズ */
+	static constexpr size_t		hud_rotation_size_{3U};				/* HUD回転パラメータ通知のデータサイズ */
 
-	CVhalHudScreenController*    p_hud_screen_controller_;  /* HUDスクリーンコントローラ */
+	CVhalHudScreenController*    p_hud_screen_controller_{nullptr};  /* HUDスクリーンコントローラ */
 
 	/* HUD機能有無判定結果通知 */
 	void NotifyHudFunctionStatus(const std::vector<uint8_t>& data) noexcept;

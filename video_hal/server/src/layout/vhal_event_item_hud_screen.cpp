@@ -18,7 +18,6 @@ namespace videohal
  戻り値  ：	なし
 *****************************************************************************/
 CVhalHudScreenReceiver::CVhalHudScreenReceiver(void) noexcept
-		:	p_hud_screen_controller_{nullptr}
 {
 }
 
@@ -27,7 +26,7 @@ CVhalHudScreenReceiver::CVhalHudScreenReceiver(void) noexcept
  引数    ：	なし
  戻り値  ：	なし
 *****************************************************************************/
-CVhalHudScreenReceiver::~CVhalHudScreenReceiver(void) noexcept 
+CVhalHudScreenReceiver::~CVhalHudScreenReceiver(void) noexcept
 {
 }
 
@@ -52,7 +51,7 @@ void CVhalHudScreenReceiver::Receive(const std::vector<uint8_t>& data)
 		const uint8_t last_byte{static_cast<uint8_t>(data[data.size() - 1U])};
 		if (static_cast<uint8_t>(kDatatypeDisplay) == last_byte)
 		{
-			const std::size_t recv_data_opc{kRecvDataOpc_};
+			constexpr std::size_t recv_data_opc{kRecvDataOpc_};
 			switch (data[recv_data_opc])
 			{
 				/* HUD機能有無判定結果通知 */
@@ -73,7 +72,7 @@ void CVhalHudScreenReceiver::Receive(const std::vector<uint8_t>& data)
 				case SUB_TYPE_DISP_MODE_RSP:
 					break;
 				default:
-					VHAL_LOGW("unknown sub_type. sub_type=0x%02X", static_cast<unsigned int>(data[recv_data_opc]));
+					VHAL_LOGW("unknown sub_type. sub_type=0x%02X", static_cast<uint32_t>(data[recv_data_opc]));
 					break;
 			}
 		}
@@ -175,7 +174,7 @@ void CVhalHudScreenReceiver::NotifyHudFunctionStatus(const std::vector<uint8_t>&
 					break;
 				/* データ内容が不正の場合はHUD機能無とする */
 				default:
-					VHAL_LOGE("unknown sys_hud_func. sys_hud_func=0x%02X", static_cast<unsigned int>(hud_func));
+					VHAL_LOGE("unknown sys_hud_func. sys_hud_func=0x%02X", static_cast<u_int32_t>(hud_func));
 					p_hud_screen_controller_->ApplyHudFunctionStatus(false);
 					break;
 			}
@@ -210,7 +209,7 @@ void CVhalHudScreenReceiver::NotifyHudDistortionCorrection(const std::vector<uin
 		/* 受信データサイズの確認 */
 		if ((hud_distortion_correct_size_ + 1U) == data.size())
 		{
-			sys_hud_black_req black_screen_req{static_cast<sys_hud_black_req>(data[black_pos_])};	/* 黒画表示要求の設定 */
+			const sys_hud_black_req black_screen_req{static_cast<sys_hud_black_req>(data[black_pos_])};	/* 黒画表示要求の設定 */
 
 			/* 黒画表示要求なしの場合 */
 			if (sys_hud_black_req::no_black == black_screen_req)

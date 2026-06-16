@@ -15,16 +15,6 @@
 namespace videohal
 {
 
-/* HUD機能有無判定結果 */
-enum class sys_hud_func : uint8_t {
-	no_func	= 0x00U,	/* 機能無 */
-	func	= 0x01U,	/* 機能有 */
-};
-enum class sys_hud_black_req : uint8_t {
-	no_black	= 0x00U,	/* 黒画表示要求なし（HUD通常表示） */
-	black		= 0x01U,	/* 黒画表示要求あり（HUD黒画表示） */
-};
-
 class CVhalHudScreenController {
 public:
 	CVhalHudScreenController(void) noexcept;
