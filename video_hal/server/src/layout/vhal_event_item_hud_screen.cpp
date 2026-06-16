@@ -12,6 +12,21 @@
 namespace videohal
 {
 
+namespace
+{
+/* HUD機能有無判定結果 */
+enum class HudFunctionStatus : uint8_t {
+	no_func = 0x00U,
+	func = 0x01U,
+};
+
+/* HUD黒画表示要求 */
+enum class HudBlackRequest : uint8_t {
+	no_black = 0x00U,
+	black = 0x01U,
+};
+} /* anonymous namespace */
+
 /*****************************************************************************
  処理概要：	コンストラクタ
  引数    ：	なし

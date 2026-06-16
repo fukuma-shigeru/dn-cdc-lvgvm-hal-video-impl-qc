@@ -15,16 +15,6 @@
 namespace videohal
 {
 
-/* HUD機能有無判定結果 */
-enum class HudFunctionStatus : uint8_t {
-	no_func	= 0x00U,	/* 機能無 */
-	func	= 0x01U,	/* 機能有 */
-};
-enum class HudBlackRequest : uint8_t {
-	no_black	= 0x00U,	/* 黒画表示要求なし（HUD通常表示） */
-	black		= 0x01U,	/* 黒画表示要求あり（HUD黒画表示） */
-};
-
 /*****************************************************************************
  クラス名称：CVhalHudScreenReceiver
  処理概要  ：スクリーンショット応答通信イベントクラス
