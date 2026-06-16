@@ -28,7 +28,7 @@ namespace
 		const size_t payload_end, uint8_t& out) noexcept
 	{
 		bool ret{true};
-		if (parse_index >= payload_end)
+		if ((parse_index >= payload_end) || (parse_index >= static_cast<size_t>(data.size())))
 		{
 			ret = false;
 		}
@@ -44,7 +44,7 @@ namespace
 		const size_t payload_end, uint16_t& out) noexcept
 	{
 		bool ret{true};
-		if ((parse_index + 1U) >= payload_end)
+		if (((parse_index + 1U) >= payload_end) || (parse_index >= static_cast<size_t>(data.size())))
 		{
 			ret = false;
 		}
@@ -212,8 +212,8 @@ void CVhalHudScreenReceiver::NotifyHudFunctionStatus(const std::vector<uint8_t>&
 	if (nullptr != p_hud_screen_controller_)
 	{
 		/* 受信データサイズの確認 */
-		const size_t data_size{data.size()};
-		if ((hud_func_st_size_ + 1U) == data_size && data_size >= 2U) 
+		const size_t data_size{static_cast<size_t>(data.size())};
+		if (((hud_func_st_size_ + 1U) == data_size) && (data_size >= 2U)) 
 		{
 			/* HUD機能有無判定結果(0：機能無 1：機能有) */
 			const uint8_t hud_func_raw{static_cast<uint8_t>(data[1U])};
