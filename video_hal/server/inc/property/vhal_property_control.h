@@ -51,7 +51,6 @@ class CVhalHdcpMiscReceiver;
 class CVhalHdcpAuthRsltData;
 class CVhalEnvironmentManager;
 class CVhalColorAdjustMiscReceiver;
-class CVhalScreenHudReceiver;
 
 /* プロパティエントリー構造体 */
 struct VhalPropertyEntry

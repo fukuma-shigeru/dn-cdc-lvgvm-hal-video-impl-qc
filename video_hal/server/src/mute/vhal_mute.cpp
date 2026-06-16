@@ -201,7 +201,6 @@ int32_t CVhalMute::Initialize(CVhalMainControl * const p_main_control, CVhalLayo
 							int32_t ivi_id_front{0};
 							int32_t ivi_id_rear{0};
 							int32_t ivi_id_ic{0};
-							int32_t ivi_id_hud{0};
 							/* BEVstep3 */
 							int32_t buf_type{static_cast<int32_t>(wlrenderer::CWaylandRendererVideo::VIDEO_BUFFER_TYPE_DMA)};
 							int32_t format{static_cast<int32_t>(DRM_FORMAT_XRGB8888)};
@@ -386,6 +385,7 @@ int32_t CVhalMute::Initialize(CVhalMainControl * const p_main_control, CVhalLayo
 								const bool hud_available{p_layout_mng_->IsScreenAvailable(screen_id_hud)};
 								if (true == hud_available)
 								{
+									int32_t ivi_id_hud{0};
 									/* HUDのMUTE用のWaylandRendererVideo作成 */
 									p_layout_mng_->SetBlinderHudDispMuteInit(mute_init);
 									ret = p_layout_mng_->GetBlinderID(VhalBlinderType::VHAL_BLINDER_TYPE_HUD_DISPLAY, ivi_id_hud);

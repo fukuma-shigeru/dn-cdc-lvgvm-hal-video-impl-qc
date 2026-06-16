@@ -15,16 +15,6 @@ namespace videohal
 
 namespace
 {
-	enum class HudFunctionStatus : uint8_t {
-		no_func = 0x00U,
-		func = 0x01U,
-	};
-
-	enum class HudBlackRequest : uint8_t {
-		no_black = 0x00U,
-		black = 0x01U,
-	};
-
 	bool ReadU8WithBoundary(const std::vector<uint8_t>& data, size_t& parse_index,
 		const size_t payload_end, uint8_t& out) noexcept
 	{
@@ -225,6 +215,10 @@ void CVhalHudScreenReceiver::NotifyHudFunctionStatus(const std::vector<uint8_t>&
 		const size_t data_size{static_cast<size_t>(data.size())};
 		if ((hud_func_st_size_ + 1U) == data_size) 
 		{
+			enum class HudFunctionStatus : uint8_t {
+				no_func = 0x00U,
+				func = 0x01U,
+			};
 			/* HUD機能有無判定結果(0：機能無 1：機能有) */
 			const uint8_t hud_func_raw{static_cast<uint8_t>(data[1U])};
 			switch (hud_func_raw)
@@ -274,6 +268,10 @@ void CVhalHudScreenReceiver::NotifyHudDistortionCorrection(const std::vector<uin
 		/* 受信データサイズの確認 */
 		if ((hud_distortion_correct_size_ + 1U) == data.size())
 		{
+			enum class HudBlackRequest : uint8_t {
+				no_black = 0x00U,
+				black = 0x01U,
+			};
 			const uint8_t black_screen_req_raw{static_cast<uint8_t>(data[black_pos_])};
 			/* 黒画表示要求なしの場合 */
 			if (static_cast<uint8_t>(HudBlackRequest::no_black) == black_screen_req_raw)

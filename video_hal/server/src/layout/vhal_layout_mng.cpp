@@ -3533,17 +3533,18 @@ bool CVhalLayoutManager::IsValidSurfaceIdAvailable(const int32_t surface_id) con
 	/* サーフェス一覧取得 */
 	std::vector<int32_t> surface_ids{};
 	ret = p_ivi_controller_->GetSurfaceIds(surface_ids);
-	if( VHAL_SUCCESS != ret )
+	if( VHAL_SUCCESS == ret )
+	{
+		/* サーフェスが生成されているかチェック */
+		const auto itr_surface_id{std::find(surface_ids.begin(), surface_ids.end(), surface_id)};
+		if( itr_surface_id != surface_ids.end() )
+		{
+			available = true;
+		}
+	}
+	else
 	{
 		VHAL_LOGE("GetSurfaceIds. ret=%d", ret);
-		return available;
-	}
-
-	/* サーフェスが生成されているかチェック */
-	const auto itr_surface_id = std::find(surface_ids.begin(), surface_ids.end(), surface_id);
-	if( itr_surface_id != surface_ids.end() )
-	{
-		available = true;
 	}
 
 	VHAL_LOGD("available=%d", available);
