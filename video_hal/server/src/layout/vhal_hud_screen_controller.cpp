@@ -97,9 +97,9 @@ void CVhalHudScreenController::ReInit(void) noexcept
 	/* HUD黒画表示要求フラグ(黒画表示要求有にする) */
 	black_screen_req_ = true;
 	/* HUD歪み補正パラメータ */
-	hud_corrections_.Clear();
+	hud_corrections_.ClearCorrections();
 	/* HUD回転パラメータ */
-	hud_rotation_.Clear();
+	hud_rotation_.ClearRotation();
 	/* HUD歪み補正パラメータ設定エラーログは初回のみ出力するためのフラグ */
 	set_distortion_log_once_ = false;
 	/* HUD回転パラメータ設定エラーログは初回のみ出力するためのフラグ */
@@ -180,7 +180,7 @@ void CVhalHudScreenController::ApplyHudDistortionCorrection(const wlrenderer::Hu
 			if (false == black_screen_req)
 			{
 				/* HUD歪み補正パラメータを保持 */
-				hud_corrections_.Set(corrections);
+				hud_corrections_.SetCorrections(corrections);
 			}
 			/* HUD機能有、かつ黒画表示要求無の場合 */
 			if (true == IsHudStatusEnableAndBlackNoRequested())
@@ -238,7 +238,7 @@ void CVhalHudScreenController::ApplyHudRotation(const uint16_t hud_rot_deg) noex
 		if (nullptr != p_renderer_)
 		{
 			/* HUD回転パラメータ設定を保持 */
-			hud_rotation_.Set(hud_rot_deg);
+			hud_rotation_.SetRotation(hud_rot_deg);
 
 			/* HUD機能有、かつ黒画表示要求無の場合 */
 			if (true == IsHudStatusEnableAndBlackNoRequested())
@@ -430,9 +430,9 @@ int32_t CVhalHudScreenController::SetStoredHudParametersToWaylandPlugin(void) no
 	if (nullptr != p_renderer_)
 	{
 		/* 保持済みのHUD歪み補正パラメータがあれば、Waylandプラグインに設定 */
-		if (true == hud_corrections_.IsValid())
+		if (true == hud_corrections_.HasCorrections())
 		{
-			const wlrenderer::HudDistortionCorrection corrections{hud_corrections_.Get()};
+			const wlrenderer::HudDistortionCorrection corrections{hud_corrections_.GetCorrections()};
 			ret = p_renderer_->SetHudDistortionCorrection(corrections);
 			if (WL_RENDERER_SUCCESS != ret)
 			{
@@ -444,15 +444,15 @@ int32_t CVhalHudScreenController::SetStoredHudParametersToWaylandPlugin(void) no
 				}
 			}
 			/* 成功、失敗に関わらず保持しているHUD歪み補正パラメータをクリア */
-			hud_corrections_.Clear();
+			hud_corrections_.ClearCorrections();
 		}
 
 		if (WL_RENDERER_SUCCESS == ret)
 		{
 			/* 保持済みのHUD回転パラメータがあれば、Waylandプラグインに設定 */
-			if (true == hud_rotation_.IsValid())
+			if (true == hud_rotation_.HasRotation())
 			{
-				const uint16_t rotation{hud_rotation_.Get()};
+				const uint16_t rotation{hud_rotation_.GetRotation()};
 				ret	= p_renderer_->SetHudRotation(rotation);
 				if (WL_RENDERER_SUCCESS != ret)
 				{
@@ -464,7 +464,7 @@ int32_t CVhalHudScreenController::SetStoredHudParametersToWaylandPlugin(void) no
 					}
 				}
 				/* 成功、失敗に関わらず保持しているHUD回転パラメータをクリア */
-				hud_rotation_.Clear();
+				hud_rotation_.ClearRotation();
 			}
 		}
 	}

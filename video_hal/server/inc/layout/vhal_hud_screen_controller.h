@@ -58,21 +58,21 @@ private:
 	/* HUD歪み補正パラメータ保持用構造体 */
 	class HudCorrectionsState {
 	public:
-		void Clear(void) noexcept
+		void ClearCorrections(void) noexcept
 		{
 			value = wlrenderer::HudDistortionCorrection{};
 			valid = false;
 		}
-		void Set(const wlrenderer::HudDistortionCorrection& corrections) noexcept
+		void SetCorrections(const wlrenderer::HudDistortionCorrection& corrections) noexcept
 		{
 			value = corrections;
 			valid = true;
 		}
-		const wlrenderer::HudDistortionCorrection& Get(void) const noexcept
+		const wlrenderer::HudDistortionCorrection& GetCorrections(void) const noexcept
 		{
 			return value;
 		}
-		bool IsValid(void) const noexcept
+		bool HasCorrections(void) const noexcept
 		{
 			return valid;
 		}
@@ -86,21 +86,21 @@ private:
 	/* HUD回転パラメータ保持用構造体 */
 	class HudRotationState {
 	public:
-		void Clear(void) noexcept
+		void ClearRotation(void) noexcept
 		{
 			value = 0;
 			valid = false;
 		}
-		void Set(const uint16_t hud_rot_deg) noexcept
+		void SetRotation(const uint16_t hud_rot_deg) noexcept
 		{
 			value = hud_rot_deg;
 			valid = true;
 		}
-		const uint16_t& Get(void) const noexcept
+		const uint16_t& GetRotation(void) const noexcept
 		{
 			return value;
 		}
-		bool IsValid(void) const noexcept
+		bool HasRotation(void) const noexcept
 		{
 			return valid;
 		}
