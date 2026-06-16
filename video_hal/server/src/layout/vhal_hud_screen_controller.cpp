@@ -353,12 +353,12 @@ bool CVhalHudScreenController::IsHudStatusEnableAndBlackNoRequested(void) const 
 {
 	VHAL_LOGV_IN();
 
-	const bool func{hud_func_};				/* HUD機能有無判定結果 */
-	const bool black{black_screen_req_};	/* 黒画表示要求フラグ */
+	/* HUD機能有、かつ黒画表示要求なしの場合、trueを返す */
+	const bool ret{(true == hud_func_) && (false == black_screen_req_)};
 
 	VHAL_LOGV_OUT();
 
-	return ((true == func) && (false == black));
+	return ret;
 }
 
 /*****************************************************************************
