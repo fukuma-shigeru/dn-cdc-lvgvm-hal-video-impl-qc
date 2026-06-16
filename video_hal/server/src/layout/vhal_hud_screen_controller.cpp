@@ -430,7 +430,7 @@ int32_t CVhalHudScreenController::SetStoredHudParametersToWaylandPlugin(void) no
 	if (nullptr != p_renderer_)
 	{
 		/* 保持済みのHUD歪み補正パラメータがあれば、Waylandプラグインに設定 */
-		if (true == hud_corrections_.valid)
+		if (true == hud_corrections_.IsValid())
 		{
 			const wlrenderer::HudDistortionCorrection corrections{hud_corrections_.Get()};
 			ret = p_renderer_->SetHudDistortionCorrection(corrections);
@@ -450,7 +450,7 @@ int32_t CVhalHudScreenController::SetStoredHudParametersToWaylandPlugin(void) no
 		if (WL_RENDERER_SUCCESS == ret)
 		{
 			/* 保持済みのHUD回転パラメータがあれば、Waylandプラグインに設定 */
-			if (true == hud_rotation_.valid)
+			if (true == hud_rotation_.IsValid())
 			{
 				const uint16_t rotation{hud_rotation_.Get()};
 				ret	= p_renderer_->SetHudRotation(rotation);

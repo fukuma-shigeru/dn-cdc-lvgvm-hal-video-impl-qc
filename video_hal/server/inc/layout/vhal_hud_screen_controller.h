@@ -56,9 +56,8 @@ private:
 	bool hud_mute_surface_available_;
 
 	/* HUD歪み補正パラメータ保持用構造体 */
-	struct HudCorrectionsState {
-		wlrenderer::HudDistortionCorrection value{};
-		bool valid{false};
+	class HudCorrectionsState {
+	public:
 		void Clear(void) noexcept
 		{
 			value = wlrenderer::HudDistortionCorrection{};
@@ -73,13 +72,20 @@ private:
 		{
 			return value;
 		}
+		bool IsValid(void) const noexcept
+		{
+			return valid;
+		}
+
+	private:
+		wlrenderer::HudDistortionCorrection value{};
+		bool valid{false};
 	};
 	HudCorrectionsState hud_corrections_;
 
 	/* HUD回転パラメータ保持用構造体 */
-	struct HudRotationState {
-		uint16_t value{};
-		bool valid{false};
+	class HudRotationState {
+	public:
 		void Clear(void) noexcept
 		{
 			value = 0;
@@ -94,6 +100,14 @@ private:
 		{
 			return value;
 		}
+		bool IsValid(void) const noexcept
+		{
+			return valid;
+		}
+
+	private:
+		uint16_t value{};
+		bool valid{false};
 	};
 	HudRotationState hud_rotation_;
 
