@@ -7,76 +7,10 @@
 #include "vhal_event_item_hud_screen_event.h"
 #include "vhal_micon_misc_opc.h"
 #include "vhal_debug_system.h"
-#include <array>
 #include <cstdint>
 
 namespace videohal
 {
-
-namespace
-{
-	bool ReadU8WithBoundary(const std::vector<uint8_t>& data, size_t& parse_index,
-		const size_t payload_end, uint8_t& out) noexcept
-	{
-		const size_t data_size{static_cast<size_t>(data.size())};
-		bool ret{true};
-
-		if ((payload_end <= data_size) &&
-			(parse_index < payload_end) &&
-			(parse_index < data_size))
-		{
-			out = static_cast<uint8_t>(data[parse_index]);
-			++parse_index;
-		}
-		else
-		{
-			ret = false;
-		}
-		return ret;
-	}
-
-	bool ReadLe16WithBoundary(const std::vector<uint8_t>& data, size_t& parse_index,
-		const size_t payload_end, uint16_t& out) noexcept
-	{
-		const size_t data_size{static_cast<size_t>(data.size())};
-		bool ret{true};
-
-		if ((payload_end <= data_size) &&
-			(2U <= (payload_end - parse_index)) &&
-			(parse_index < data_size))
-		{
-			const uint8_t low_byte{static_cast<uint8_t>(data[parse_index])};
-			++parse_index;
-			const uint8_t high_byte{static_cast<uint8_t>(data[parse_index])};
-			++parse_index;
-			const uint32_t assembled{static_cast<uint32_t>(low_byte) |
-				(static_cast<uint32_t>(high_byte) << 8U)};
-			out = static_cast<uint16_t>(assembled);
-		}
-		else
-		{
-			ret = false;
-		}
-		return ret;
-	}
-
-	bool ReadCoordArrayWithBoundary(const std::vector<uint8_t>& data, size_t& parse_index,
-		const size_t payload_end, std::array<uint16_t, wlrenderer::kHudCoordinates>& dest) noexcept
-	{
-		bool ret{true};
-
-		for (size_t i{0U}; i < dest.size(); ++i)
-		{
-			if (false == ReadLe16WithBoundary(data, parse_index, payload_end, dest[i]))
-			{
-				VHAL_LOGE("invalid idx=%zu", i);
-				ret = false;
-			}
-		}
-		return ret;
-	}
-
-}  /* unnamed namespace */
 
 /*****************************************************************************
  処理概要：	コンストラクタ
@@ -283,35 +217,91 @@ void CVhalHudScreenReceiver::NotifyHudDistortionCorrection(const std::vector<uin
 				size_t parse_index{1U};	/* データは opcode の次（index 1）から開始 */
 				constexpr size_t payload_end{black_pos_};
 
-				if ((false == ReadU8WithBoundary(data, parse_index, payload_end, corrections.gv_sys_hud_type)) ||			/* HUDタイプ */
-					(false == ReadU8WithBoundary(data, parse_index, payload_end, corrections.gv_sys_hud_size)) ||			/* HUDサイズ */
-					(false == ReadU8WithBoundary(data, parse_index, payload_end, corrections.gv_vipos_direction)) ||		/* 描画方向(意匠向き) */
-					(false == ReadLe16WithBoundary(data, parse_index, payload_end, corrections.gv_vipos_resl_height)) ||	/* HUDTFT解像度 縦 */
-					(false == ReadLe16WithBoundary(data, parse_index, payload_end, corrections.gv_vipos_resl_width)) ||		/* HUDTFT解像度 横 */
-					(false == ReadLe16WithBoundary(data, parse_index, payload_end, corrections.gv_vipos_base_x)) ||			/* HUDTFT有効エリア 基準点x */
-					(false == ReadLe16WithBoundary(data, parse_index, payload_end, corrections.gv_vipos_base_y)) ||			/* HUDTFT有効エリア 基準点y */
-					(false == ReadLe16WithBoundary(data, parse_index, payload_end, corrections.gv_vipos_avail_height)) ||	/* HUDTFT有効エリア 縦 */
-					(false == ReadLe16WithBoundary(data, parse_index, payload_end, corrections.gv_vipos_avail_width)))		/* HUDTFT有効エリア 横*/
+				/* 8bitデータの読み込み(境界チェックあり)ラムダ式 */
+				auto const read_u8 = [&data, &parse_index, payload_end](uint8_t& out) noexcept -> bool
+				{
+					bool ret{true};
+					const size_t idx{parse_index};
+
+					if ((idx < payload_end) &&
+						(idx <= data.size()))
+					{
+						out = static_cast<uint8_t>(data[idx]);
+						++parse_index;
+					}
+					else
+					{
+						ret = false;
+					}
+					return ret;
+				};
+				/* 16bitデータの読み込み(境界チェックあり)ラムダ式 */
+				auto const read_le16 = [&data, &parse_index, payload_end](uint16_t& out) noexcept -> bool
+				{
+					bool ret{true};
+					const size_t idx{parse_index};
+
+					if ((2U <= (payload_end - idx)) &&
+						(idx < data.size()))
+					{
+						const uint8_t l_byte{static_cast<uint8_t>(data[idx])};
+						const uint8_t h_byte{static_cast<uint8_t>(data[idx + 1U])};
+						const uint32_t assembled{static_cast<uint32_t>(l_byte) | (static_cast<uint32_t>(h_byte) << 8U)};
+						out = static_cast<uint16_t>(assembled);
+						parse_index += 2U;
+					}
+					else
+					{
+						ret = false;
+					}
+					return ret;
+				};
+
+				if ((false == read_u8(corrections.gv_sys_hud_type))         ||	/* HUDタイプ */
+					(false == read_u8(corrections.gv_sys_hud_size))         ||	/* HUDサイズ */
+					(false == read_u8(corrections.gv_vipos_direction))      ||	/* 描画方向(意匠向き) */
+					(false == read_le16(corrections.gv_vipos_resl_height))  ||	/* HUDTFT解像度 縦 */
+					(false == read_le16(corrections.gv_vipos_resl_width))   ||	/* HUDTFT解像度 横 */
+					(false == read_le16(corrections.gv_vipos_base_x))       ||	/* HUDTFT有効エリア 基準点x */
+					(false == read_le16(corrections.gv_vipos_base_y))       ||	/* HUDTFT有効エリア 基準点y */
+					(false == read_le16(corrections.gv_vipos_avail_height)) ||	/* HUDTFT有効エリア 縦 */
+					(false == read_le16(corrections.gv_vipos_avail_width)))		/* HUDTFT有効エリア 横*/
 				{
 					/* 境界チェックエラーの場合は通知を破棄 */
 					VHAL_LOGE("invalid data layout. size=%zu", data.size());
 				}
 				else
 				{
-					if (ReadCoordArrayWithBoundary(data, parse_index, payload_end, corrections.gv_vipos_basept_x) &&	/* 画像標準値 x座標 point 1～15 */
-						ReadCoordArrayWithBoundary(data, parse_index, payload_end, corrections.gv_vipos_basept_y) &&	/* 画像標準値 y座標 point 1～15 */
-						ReadCoordArrayWithBoundary(data, parse_index, payload_end, corrections.gv_vipos_adjpt_x) &&		/* 画像補正値 x座標 point 1～15 */
-						ReadCoordArrayWithBoundary(data, parse_index, payload_end, corrections.gv_vipos_adjpt_y) &&		/* 画像補正値 y座標 point 1～15 */
-						(parse_index == payload_end))
+					/* 16bitデータのLOOP読み込み(境界チェックあり)ラムダ式 */
+					auto read_coord_array = [&read_le16](auto& dest) noexcept -> bool
 					{
-						/* HUD歪み補正パラメータ設定 */
-						p_hud_screen_controller_->ApplyHudDistortionCorrection(corrections, false);
-					}
-					else
+						bool ret{true};
+
+						for (size_t i{0U}; i < wlrenderer::kHudCoordinates; ++i)
+						{
+							if (false == read_le16(dest[i]))
+							{
+								ret = false;
+								VHAL_LOGE("invalid idx=%zu", i);
+								break;
+							}
+						}
+						return ret;
+					};
+
+					if ((false == read_coord_array(corrections.gv_vipos_basept_x)) ||	/* 画像標準値 x座標 point 1～15 */
+						(false == read_coord_array(corrections.gv_vipos_basept_y)) ||	/* 画像標準値 y座標 point 1～15 */
+						(false == read_coord_array(corrections.gv_vipos_adjpt_x))  ||	/* 画像補正値 x座標 point 1～15 */
+						(false == read_coord_array(corrections.gv_vipos_adjpt_y)))		/* 画像補正値 y座標 point 1～15 */
 					{
 						/* 境界チェックエラーの場合は通知を破棄 */
 						const size_t remaining_bytes{(parse_index <= payload_end) ? (payload_end - parse_index) : 0U};
 						VHAL_LOGE("invalid data layout. remaining bytes=%zu", remaining_bytes);
+					}
+					else
+					{
+						/* HUD歪み補正パラメータ設定 */
+						p_hud_screen_controller_->ApplyHudDistortionCorrection(corrections, false);
 					}
 				}
 			}
