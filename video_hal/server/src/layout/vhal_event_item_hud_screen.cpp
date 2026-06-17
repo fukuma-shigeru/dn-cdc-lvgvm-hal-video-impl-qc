@@ -236,7 +236,7 @@ void CVhalHudScreenReceiver::NotifyHudDistortionCorrection(const std::vector<uin
 					return ret;
 				}};
 				/* 16bitデータの読み込み(境界チェックあり)ラムダ式 */
-				auto const read_le16 = {[&data, &parse_index, payload_end](uint16_t& out) noexcept -> bool
+				auto const read_le16{[&data, &parse_index, payload_end](uint16_t& out) noexcept -> bool
 				{
 					bool ret{true};
 					const size_t idx{parse_index};
@@ -275,7 +275,7 @@ void CVhalHudScreenReceiver::NotifyHudDistortionCorrection(const std::vector<uin
 				else
 				{
 					/* 16bitデータのLOOP読み込み(境界チェックあり)ラムダ式 */
-					auto const read_coord_array = [&read_le16](auto& dest) noexcept -> bool
+					auto const read_coord_array{[&read_le16](auto& dest) noexcept -> bool
 					{
 						bool ret{true};
 
