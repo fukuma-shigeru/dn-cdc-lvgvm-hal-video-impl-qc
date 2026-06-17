@@ -9,19 +9,6 @@
 #include "vhal_debug_system.h"
 #include <cstdint>
 
-inline uint16_t VhalAssembleLe16(const std::vector<uint8_t>& data, const size_t idx) noexcept
-{
-	if (idx + 1U >= data.size())
-	{
-		VHAL_LOGE("data size error %zu", data.size());
-    	return 0U;  // またはエラーハンドリング
-    }
-	const uint8_t l_byte{static_cast<uint8_t>(data[idx])};
-	const uint8_t h_byte{static_cast<uint8_t>(data[idx + 1U])};
-	const uint32_t assembled{static_cast<uint32_t>(l_byte) | (static_cast<uint32_t>(h_byte) << 8U)};
-
-	return static_cast<uint16_t>(assembled);
-}
 namespace videohal
 {
 
@@ -228,56 +215,55 @@ void CVhalHudScreenReceiver::NotifyHudDistortionCorrection(const std::vector<uin
 			{
 				wlrenderer::HudDistortionCorrection corrections{};
 				size_t parse_index{1U};	/* データは opcode の次（index 1）から開始 */
-				constexpr size_t payload_end{black_pos_};
 				/* HUDタイプ */
-				corrections.gv_sys_hud_type = static_cast<uint8_t>(data[parse_index]);		
+				corrections.gv_sys_hud_type = AssembleLe8(data, parse_index);
 				parse_index++;
 				/* HUDサイズ */
-				corrections.gv_sys_hud_size = static_cast<uint8_t>(data[parse_index]);
+				corrections.gv_sys_hud_size = AssembleLe8(data, parse_index);
 				parse_index++;
 				/* 描画方向(意匠向き) */
-				corrections.gv_vipos_direction = static_cast<uint8_t>(data[parse_index]);
+				corrections.gv_vipos_direction = AssembleLe8(data, parse_index);
 				parse_index++;
 				/* HUDTFT解像度 縦 */
-				corrections.gv_vipos_resl_height = VhalAssembleLe16(data, parse_index);
+				corrections.gv_vipos_resl_height = AssembleLe16(data, parse_index);
 				parse_index += 2U;
 				/* HUDTFT解像度 横 */
-				corrections.gv_vipos_resl_width = VhalAssembleLe16(data, parse_index);
+				corrections.gv_vipos_resl_width = AssembleLe16(data, parse_index);
 				parse_index += 2U;
 				/* HUDTFT有効エリア 基準点x */
-				corrections.gv_vipos_base_x = VhalAssembleLe16(data, parse_index);
+				corrections.gv_vipos_base_x = AssembleLe16(data, parse_index);
 				parse_index += 2U;
 				/* HUDTFT有効エリア 基準点y */
-				corrections.gv_vipos_base_y = VhalAssembleLe16(data, parse_index);
+				corrections.gv_vipos_base_y = AssembleLe16(data, parse_index);
 				parse_index += 2U;
 				/* HUDTFT有効エリア 縦 */
-				corrections.gv_vipos_avail_height = VhalAssembleLe16(data, parse_index);
+				corrections.gv_vipos_avail_height = AssembleLe16(data, parse_index);
 				parse_index += 2U;
 				/* HUDTFT有効エリア 横 */
-				corrections.gv_vipos_avail_width = VhalAssembleLe16(data, parse_index);
+				corrections.gv_vipos_avail_width = AssembleLe16(data, parse_index);
 				parse_index += 2U;
 				/* 画像標準値 x座標 point 1～15 */
 				for (size_t i{0U}; i < wlrenderer::kHudCoordinates; ++i)
 				{
-					corrections.gv_vipos_basept_x[i] = VhalAssembleLe16(data, parse_index);
+					corrections.gv_vipos_basept_x[i] = AssembleLe16(data, parse_index);
 					parse_index += 2U;
 				}
 				/* 画像標準値 y座標 point 1～15 */
 				for (size_t i{0U}; i < wlrenderer::kHudCoordinates; ++i)
 				{
-					corrections.gv_vipos_basept_y[i] = VhalAssembleLe16(data, parse_index);
+					corrections.gv_vipos_basept_y[i] = AssembleLe16(data, parse_index);
 					parse_index += 2U;
 				}
 				/* 画像補正値 x座標 point 1～15 */
 				for (size_t i{0U}; i < wlrenderer::kHudCoordinates; ++i)
 				{
-					corrections.gv_vipos_adjpt_x[i] = VhalAssembleLe16(data, parse_index);
+					corrections.gv_vipos_adjpt_x[i] = AssembleLe16(data, parse_index);
 					parse_index += 2U;
 				}
 				/* 画像補正値 y座標 point 1～15 */
 				for (size_t i{0U}; i < wlrenderer::kHudCoordinates; ++i)
 				{
-					corrections.gv_vipos_adjpt_y[i] = VhalAssembleLe16(data, parse_index);
+					corrections.gv_vipos_adjpt_y[i] = AssembleLe16(data, parse_index);
 					parse_index += 2U;
 				}
 
@@ -327,7 +313,7 @@ void CVhalHudScreenReceiver::NotifyHudRotation(const std::vector<uint8_t>& data)
 		/* 受信データサイズの確認 */
 		if ((hud_rotation_size_ + 1U) == data.size())
 		{
-			const uint16_t hud_rot_deg{VhalAssembleLe16(data, 1)};	/* HUD回転角度(単位:Deg LSB:0.01) */
+			const uint16_t hud_rot_deg{AssembleLe16(data, 1U)};	/* HUD回転角度(単位:Deg LSB:0.01) */
 			p_hud_screen_controller_->ApplyHudRotation(hud_rot_deg);
 		}
 		/* データサイズエラーの場合は通知を破棄 */
@@ -343,6 +329,55 @@ void CVhalHudScreenReceiver::NotifyHudRotation(const std::vector<uint8_t>& data)
 	}
 
 	VHAL_LOGV_OUT();
+}
+
+/*****************************************************************************
+ 処理概要：	16bitデータ取得
+ 引数    ：	const std::vector<uint8_t>& data	(i) 受信データ
+			const size_t idx					(i) インデックス
+ 戻り値  ：	16bitデータ
+*****************************************************************************/
+uint16_t CVhalHudScreenReceiver::AssembleLe16(const std::vector<uint8_t>& data, const size_t idx) noexcept
+{
+	uint32_t assembled{0U};
+
+	if ((false == data.empty()) &&
+		((data.size() - 1U) >= idx))
+	{
+		const uint8_t l_byte{static_cast<uint8_t>(data[idx])};
+		const uint8_t h_byte{static_cast<uint8_t>(data[idx + 1U])};
+		assembled = static_cast<uint32_t>(l_byte) | (static_cast<uint32_t>(h_byte) << 8U);
+    }
+	else
+	{
+		VHAL_LOGE("data size error %zu", data.size());
+    	assembled = 0U;
+	}
+
+	return static_cast<uint16_t>(assembled);
+}
+
+/*****************************************************************************
+ 処理概要：	8bitデータ取得
+ 引数    ：	const std::vector<uint8_t>& data	(i) 受信データ
+			const size_t idx					(i) インデックス
+ 戻り値  ：	8bitデータ
+*****************************************************************************/
+uint8_t CVhalHudScreenReceiver::AssembleLe8(const std::vector<uint8_t>& data, const size_t idx) noexcept
+{
+	uint8_t assembled{0U};
+
+	if (data.size() >= idx)
+	{
+		assembled = static_cast<uint8_t>(data[idx]);
+    }
+	else
+	{
+		VHAL_LOGE("data size error %zu", data.size());
+    	assembled = 0U;
+	}
+
+	return assembled;
 }
 
 } /* namespace videohal */

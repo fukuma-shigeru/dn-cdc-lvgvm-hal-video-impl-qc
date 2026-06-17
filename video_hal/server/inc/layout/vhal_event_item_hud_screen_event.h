@@ -54,6 +54,11 @@ private:
 	void NotifyHudDistortionCorrection(const std::vector<uint8_t>& data) noexcept;
 	/* HUD回転パラメータ通知 */
 	void NotifyHudRotation(const std::vector<uint8_t>& data) noexcept;
+
+	/* 16bitデータ取得 */
+	static uint16_t AssembleLe16(const std::vector<uint8_t>& data, const size_t idx) noexcept;
+	/* 8bitデータ取得 */
+	static uint8_t  AssembleLe8(const std::vector<uint8_t>& data, const size_t idx) noexcept;
 };
 
 } /* namespace videohal */

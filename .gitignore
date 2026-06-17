@@ -1,2 +1,6 @@
 build/
+build_qc/
 .vscode/
+data-coverity
+coverity.conf
+coverity.conf_bk
