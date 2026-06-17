@@ -218,7 +218,7 @@ void CVhalHudScreenReceiver::NotifyHudDistortionCorrection(const std::vector<uin
 				constexpr size_t payload_end{black_pos_};
 
 				/* 8bitデータの読み込み(境界チェックあり)ラムダ式 */
-				auto const read_u8 = [&data, &parse_index, payload_end](uint8_t& out) noexcept -> bool
+				auto const read_u8{[&data, &parse_index, payload_end](uint8_t& out) noexcept -> bool
 				{
 					bool ret{true};
 					const size_t idx{parse_index};
@@ -234,15 +234,17 @@ void CVhalHudScreenReceiver::NotifyHudDistortionCorrection(const std::vector<uin
 						ret = false;
 					}
 					return ret;
-				};
+				}};
 				/* 16bitデータの読み込み(境界チェックあり)ラムダ式 */
-				auto const read_le16 = [&data, &parse_index, payload_end](uint16_t& out) noexcept -> bool
+				auto const read_le16 = {[&data, &parse_index, payload_end](uint16_t& out) noexcept -> bool
 				{
 					bool ret{true};
 					const size_t idx{parse_index};
 
-					if ((2U <= (payload_end - idx)) &&
-						(idx < data.size()))
+					if ((idx <= payload_end)        &&
+						((payload_end - idx) >= 2U) &&
+						(idx <= data.size())        &&
+						((data.size() - idx) >= 2U))
 					{
 						const uint8_t l_byte{static_cast<uint8_t>(data[idx])};
 						const uint8_t h_byte{static_cast<uint8_t>(data[idx + 1U])};
@@ -255,7 +257,7 @@ void CVhalHudScreenReceiver::NotifyHudDistortionCorrection(const std::vector<uin
 						ret = false;
 					}
 					return ret;
-				};
+				}};
 
 				if ((false == read_u8(corrections.gv_sys_hud_type))         ||	/* HUDタイプ */
 					(false == read_u8(corrections.gv_sys_hud_size))         ||	/* HUDサイズ */
@@ -273,7 +275,7 @@ void CVhalHudScreenReceiver::NotifyHudDistortionCorrection(const std::vector<uin
 				else
 				{
 					/* 16bitデータのLOOP読み込み(境界チェックあり)ラムダ式 */
-					auto read_coord_array = [&read_le16](auto& dest) noexcept -> bool
+					auto const read_coord_array = [&read_le16](auto& dest) noexcept -> bool
 					{
 						bool ret{true};
 
@@ -287,7 +289,7 @@ void CVhalHudScreenReceiver::NotifyHudDistortionCorrection(const std::vector<uin
 							}
 						}
 						return ret;
-					};
+					}};
 
 					if ((false == read_coord_array(corrections.gv_vipos_basept_x)) ||	/* 画像標準値 x座標 point 1～15 */
 						(false == read_coord_array(corrections.gv_vipos_basept_y)) ||	/* 画像標準値 y座標 point 1～15 */
