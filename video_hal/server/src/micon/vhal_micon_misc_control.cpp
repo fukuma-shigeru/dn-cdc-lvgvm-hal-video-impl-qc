@@ -810,7 +810,7 @@ bool CVhalMiconCommMiscControl::IsNotifyEnabled(const uint32_t data_size, const 
 //#endif
 			}
 			/* HUD機能有無判定結果通知 (36h-43h)*/
-			else if (SUB_TYPE_DISP_HUD_FUNC_STATUS == sub_type)
+			else if (static_cast<uint8_t>(SUB_TYPE_DISP_HUD_FUNC_STATUS) == sub_type)
 			{
 				if (cmd == cmd_disp_hud_func_status_)
 				{
@@ -822,7 +822,7 @@ bool CVhalMiconCommMiscControl::IsNotifyEnabled(const uint32_t data_size, const 
 				}
 			}
 			/* HUD歪み補正パラメータ通知 (36h-44h)*/
-			else if (SUB_TYPE_DISP_HUD_DISTORTION_CORRECTION == sub_type)
+			else if (static_cast<uint8_t>(SUB_TYPE_DISP_HUD_DISTORTION_CORRECTION) == sub_type)
 			{
 				if (cmd == cmd_disp_hud_distortion_correction_)
 				{
@@ -834,7 +834,7 @@ bool CVhalMiconCommMiscControl::IsNotifyEnabled(const uint32_t data_size, const 
 				}
 			}
 			/* HUD回転パラメータ通知 (36h-45h)*/
-			else if (SUB_TYPE_DISP_HUD_ROTATION == sub_type)
+			else if (static_cast<uint8_t>(SUB_TYPE_DISP_HUD_ROTATION) == sub_type)
 			{
 				if (cmd == cmd_disp_hud_rotation_)
 				{
