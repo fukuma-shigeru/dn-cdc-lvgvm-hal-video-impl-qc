@@ -1048,11 +1048,6 @@ int32_t CVhalPropertyControl::Initialize(CVhalMainControl * const p_main)
 
 		/*HUD歪み補正レシーバー生成*/
 		p_hud_screen_receiver_ = std::make_unique<CVhalHudScreenReceiver>();
-		if (nullptr == p_hud_screen_receiver_)
-		{
-			VHAL_LOGW("CVhalHudScreenReceiver::make_unique error.");
-			return VHAL_ERR_MEMORY;
-		}
 		ret = p_micon_comm_control_->RegistryReceiver(p_hud_screen_receiver_.get());
 		if (VHAL_SUCCESS != ret)
 		{
@@ -1213,17 +1208,12 @@ int32_t CVhalPropertyControl::Initialize(CVhalMainControl * const p_main)
 
 	/* HUD表示制御生成はレイアウトが決定してからおこなう */
 	p_hud_screen_controller_ = std::make_unique<CVhalHudScreenController>();
-	if (nullptr == p_hud_screen_controller_)
+	ret = p_hud_screen_controller_->Initialize(p_layout_mng_.get(), p_renderer_.get());
+	if (VHAL_SUCCESS == ret)
 	{
-		VHAL_LOGW("CVhalHudScreenController::make_unique error.");
-		return VHAL_ERR_MEMORY;
-	}
-	else
-	{
-		ret = p_hud_screen_controller_->Initialize(p_layout_mng_.get(), p_renderer_.get());
-		if (VHAL_SUCCESS == ret)
+		/* HUD表示制御をHUDレシーバーに登録 */
+		if (nullptr != p_hud_screen_receiver_)
 		{
-			/* HUD表示制御をHUDレシーバーに登録 */
 			ret = p_hud_screen_receiver_->RegisterHudScreenController(p_hud_screen_controller_.get());
 			if (VHAL_SUCCESS != ret)
 			{
@@ -1233,9 +1223,13 @@ int32_t CVhalPropertyControl::Initialize(CVhalMainControl * const p_main)
 		}
 		else
 		{
-			VHAL_LOGW("CVhalHudScreenController::Initialize() error. ret=%d", ret);
-			return ret;
+			VHAL_LOGW("p_hud_screen_receiver_ is null. skip registering HUD screen controller.");
 		}
+	}
+	else
+	{
+		VHAL_LOGW("CVhalHudScreenController::Initialize() error. ret=%d", ret);
+		return ret;
 	}
 
 	for (auto itr_prop = property_entries_.begin(); itr_prop != property_entries_.end(); ++itr_prop)
@@ -1290,6 +1284,11 @@ void CVhalPropertyControl::Finalize(void)
 	/* HUD制御終了 */
 	if (nullptr != p_hud_screen_controller_)
 	{
+		/* コントローラ破棄前にレシーバー側のダングリング参照を防ぐためクリアしておく */
+		if (nullptr != p_hud_screen_receiver_)
+		{
+			p_hud_screen_receiver_->ClearHudScreenController();
+		}
 		p_hud_screen_controller_->Finalize();
 		p_hud_screen_controller_ = nullptr;
 	}
@@ -7236,14 +7235,9 @@ int32_t CVhalPropertyControl::UpdateSettingStatusDisplay(const int32_t screen_id
 		/* HUD スクリーンID */
 		else if ((VHAL_SUCCESS == hud_ret) && (hud_screen_id == screen_id))
 		{
-			if (nullptr != p_hud_screen_controller_)
-			{
-				VHAL_LOGI("HUD screen_id=%d, display=%d, resolution=(%dx%d)", screen_id, display, width, height);
-			}
-			else
-			{
-				VHAL_LOGE("p_hud_screen_controller_ is null.");
-			}
+			VHAL_LOGI("HUD screen_id=%d, display=%d, resolution=(%dx%d)", screen_id, display, width, height);
+			/* HUDはプロパティ更新対象外の為、早期リターンする */
+			return VHAL_SUCCESS;
 		}
 		else
 		{
@@ -8467,18 +8461,20 @@ void CVhalPropertyControl::StrSuspend(void)
 		}
 
 		/* HUDディスプレイデバイス状態 */
-		if (nullptr != p_hud_screen_controller_)
+		/* スクリーン有効判定 */
+		const bool available{ p_layout_mng_->IsHudScreenAvailable() };
+		if (true == available)
 		{
-			const bool is_hud_enabled{p_hud_screen_controller_->IsHudScreenEnabled()};
-			if (is_hud_enabled)
+			ret = p_layout_mng_->SetBlinderEnable(VhalBlinderType::VHAL_BLINDER_TYPE_HUD_DISPLAY, true);
+			if (VHAL_SUCCESS != ret)
 			{
-				ret = p_layout_mng_->SetBlinderEnable(VhalBlinderType::VHAL_BLINDER_TYPE_HUD_DISPLAY, true);
-				if (VHAL_SUCCESS != ret)
-				{
-					/* エラーログは対象関数内で出力。ここでは検証用ログ出力 */
-					VHAL_LOGV("SetBlinderEnable(HUD-DISP) failed. ret=%d", ret);
-				}
+				/* エラーログは対象関数内で出力。ここでは検証用ログ出力 */
+				VHAL_LOGV("SetBlinderEnable(HUD-DISP) failed. ret=%d", ret);
 			}
+		}
+		else
+		{
+			VHAL_LOGV("HUD screen is disabled. Skip SetBlinderEnable(HUD-DISP).");
 		}
 	}
 

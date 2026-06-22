@@ -17,7 +17,7 @@ namespace videohal
 
 /*****************************************************************************
  クラス名称：CVhalHudScreenReceiver
- 処理概要  ：スクリーンショット応答通信イベントクラス
+ 処理概要  ：HUD制御（機能有無/歪み補正/回転）通知受信イベントクラス
 *****************************************************************************/
 class CVhalHudScreenReceiver : public CVhalMiconReceiveItem {
 public:
@@ -32,7 +32,7 @@ public:
 	int32_t RegisterHudScreenController(CVhalHudScreenController* const p_ctrl) noexcept;
 	/* HUDスクリーンコントローラ解除 */
 	void ClearHudScreenController(void) noexcept;
-	/* HUD機能有無判定結果通通知/HUD歪み補正パラメータ通知/HUD回転パラメータ通知受信 */
+	/* HUD機能有無判定結果通知/HUD歪み補正パラメータ通知/HUD回転パラメータ通知受信 */
 	void Receive(const std::vector<uint8_t>& data) override;
 	/* 受信事前通知(無処理) */
 	void ReceivePreNotify(const std::vector<uint8_t>& data) noexcept override;

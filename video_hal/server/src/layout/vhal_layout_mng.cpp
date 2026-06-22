@@ -3763,5 +3763,32 @@ int32_t CVhalLayoutManager::SetBrinderSync(const VhalMuteFrontReason reason, con
 	return result;
 }
 
+/*****************************************************************************
+ 処理概要：	HUD スクリーン有効判定
+ 引数    ：	なし
+ 戻り値  ：	スクリーン有効判定結果
+           		true	有効
+           		false	無効
+*****************************************************************************/
+bool CVhalLayoutManager::IsHudScreenAvailable(void) const
+{
+	int32_t screen_id_hud{-1};
+	bool available{false};
+
+	/* レイアウト情報からHUD スクリーンID取得 */
+	int32_t ret{GetScreenIdHud(screen_id_hud)};
+	if (VHAL_SUCCESS == ret)
+	{
+		/* スクリーン有効判定 */
+		available = IsScreenAvailable(screen_id_hud);
+	}
+	else
+	{
+		VHAL_LOGV("GetScreenIdHud error. ret=%d", ret);
+	}
+
+	return available;
+}
+
 } /* namespace videohal */
 

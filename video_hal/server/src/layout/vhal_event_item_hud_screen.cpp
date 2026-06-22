@@ -1,12 +1,13 @@
 /*******************************************************************************
     機能名称    ：  画面HUD イベントモジュール
-    ファイル名称：  vhal_event_item_screen_hud.cpp
+    ファイル名称：  vhal_event_item_hud_screen.cpp
 *******************************************************************************/
 #include "vhal_define.h"
 #include "vhal_log.h"
 #include "vhal_event_item_hud_screen_event.h"
 #include "vhal_micon_misc_opc.h"
 #include "vhal_debug_system.h"
+
 #include <cstdint>
 
 namespace videohal
@@ -22,7 +23,7 @@ CVhalHudScreenReceiver::CVhalHudScreenReceiver(void) noexcept
 }
 
 /*****************************************************************************
- 処理概要：	HUD機能有無判定結果通通知/HUD歪み補正パラメータ通知/HUD回転パラメータ通知受信
+	処理概要：	HUD機能有無判定結果通知/HUD歪み補正パラメータ通知/HUD回転パラメータ通知受信
  引数    ：	const std::vector<uint8_t>&	data	(i)	コマンド情報ポインタ
  戻り値  ：	なし
 *****************************************************************************/
@@ -77,7 +78,7 @@ void CVhalHudScreenReceiver::Receive(const std::vector<uint8_t>& data)
 }
 
 /*****************************************************************************
- 処理概要：	スクリーンショット受信事前通知（通信モジュールスレッドからのコール）
+ 処理概要：	HUD制御通知受信事前通知（通信モジュールスレッドからのコール）
  引数    ：	const std::vector<uint8_t>&	data	(i)	コマンド情報ポインタ
  戻り値  ：	なし
 *****************************************************************************/
@@ -141,6 +142,7 @@ void CVhalHudScreenReceiver::ClearHudScreenController(void) noexcept
  処理概要：	HUD機能有無判定結果通知
  引数    ：	const std::vector<uint8_t>& data	(i) 受信データ
  戻り値  ：	なし
+ フェールセーフNo  ：	F-VHAL-N-XXX, F-VHAL-N-XXX
 *****************************************************************************/
 void CVhalHudScreenReceiver::NotifyHudFunctionStatus(const std::vector<uint8_t>& data) noexcept
 {
@@ -149,7 +151,18 @@ void CVhalHudScreenReceiver::NotifyHudFunctionStatus(const std::vector<uint8_t>&
 	if (nullptr != p_hud_screen_controller_)
 	{
 		/* 受信データサイズの確認 */
+//#ifdef VHAL_SUPPORT_FAIL_SYSTEM
+//		/* HUD機能有無判定結果通知(36h-43h)の通知サイズ異常(2byte以外) */
+//		int32_t fail_ret{0};
+//		size_t data_size{0};
+//		bool fail{CVhalDebugSystem::GetInstance().CheckFailSystem("F-VHAL-N-XXX",fail_ret)};
+//		if(true == fail)
+//		{
+//			data_size = static_cast<size_t>(fail_ret);
+//		}
+//#else
 		const size_t data_size{static_cast<size_t>(data.size())};
+//#endif
 		if ((hud_func_st_size_ + 1U) == data_size) 
 		{
 			enum class HudFunctionStatus : uint8_t {
@@ -157,7 +170,18 @@ void CVhalHudScreenReceiver::NotifyHudFunctionStatus(const std::vector<uint8_t>&
 				func = 0x01U,
 			};
 			/* HUD機能有無判定結果(0：機能無 1：機能有) */
+//#ifdef VHAL_SUPPORT_FAIL_SYSTEM
+//			/* HUD機能有無判定結果通知(36h-43h)のHUD機能有無判定結果フィールド値が機能無、機能有以外。*/
+//			fail_ret = 0;
+//			uint8_t hud_func_raw{0};
+//			bool fail{CVhalDebugSystem::GetInstance().CheckFailSystem("F-VHAL-N-XXX",fail_ret)};
+//			if(true == fail)
+//			{
+//				hud_func_raw = static_cast<uint8_t>(fail_ret);
+//			}
+//#else
 			const uint8_t hud_func_raw{static_cast<uint8_t>(data[1U])};
+//#endif
 			switch (hud_func_raw)
 			{
 				/* 機能有り */
@@ -195,6 +219,7 @@ void CVhalHudScreenReceiver::NotifyHudFunctionStatus(const std::vector<uint8_t>&
  処理概要：	HUD歪み補正パラメータ通知
  引数    ：	const std::vector<uint8_t>& data	(i) 受信データ
  戻り値  ：	なし
+ フェールセーフNo  ：	F-VHAL-N-XXX, F-VHAL-N-XXX, F-VHAL-N-XXX
 *****************************************************************************/
 void CVhalHudScreenReceiver::NotifyHudDistortionCorrection(const std::vector<uint8_t>& data) noexcept
 {
@@ -203,20 +228,56 @@ void CVhalHudScreenReceiver::NotifyHudDistortionCorrection(const std::vector<uin
 	if (nullptr != p_hud_screen_controller_)
 	{
 		/* 受信データサイズの確認 */
-		if ((hud_distortion_correct_size_ + 1U) == data.size())
+//#ifdef VHAL_SUPPORT_FAIL_SYSTEM
+//		/* HUD歪み補正パラメータ通知(36h-44h)の通知サイズ異常(137byte以外)。*/
+//		int32_t fail_ret{0};
+//		size_t data_size{0};
+//		bool fail{CVhalDebugSystem::GetInstance().CheckFailSystem("F-VHAL-N-XXX",fail_ret)};
+//		if(true == fail)
+//		{
+//			data_size = static_cast<size_t>(fail_ret);
+//		}
+//#else
+		const size_t data_size{static_cast<size_t>(data.size())};
+//#endif
+		if ((hud_distortion_correct_size_ + 1U) == data_size)
 		{
 			enum class HudBlackRequest : uint8_t {
 				no_black = 0x00U,
 				black = 0x01U,
 			};
+//#ifdef VHAL_SUPPORT_FAIL_SYSTEM
+//			/* HUD歪み補正パラメータ通知(36h-44h)の黒画表示要求フィールド値が機黒画表示要求なし、黒画表示要求あり以外。*/
+//			fail_ret = 0;
+//			uint8_t black_screen_req_raw{0};
+//			bool fail{CVhalDebugSystem::GetInstance().CheckFailSystem("F-VHAL-N-XXX",fail_ret)};
+//			if(true == fail)
+//			{
+//				black_screen_req_raw = static_cast<uint8_t>(fail_ret);
+//			}
+//#else
 			const uint8_t black_screen_req_raw{static_cast<uint8_t>(data[black_pos_])};
+//#endif
 			/* 黒画表示要求なしの場合 */
 			if (static_cast<uint8_t>(HudBlackRequest::no_black) == black_screen_req_raw)
 			{
 				wlrenderer::HudDistortionCorrection corrections{};
 				size_t parse_index{1U};	/* データは opcode の次（index 1）から開始 */
 				/* HUDタイプ */
+//#ifdef VHAL_SUPPORT_FAIL_SYSTEM
+//				/* HUD歪み補正パラメータ通知(36h-44h)の黒画表示要求フィールドが"黒画表示要求なし"で
+//				   その他の各フィールドにreserved値、未確定値、無効値が設定。*/
+//				fail_ret = 0;
+//				uint8_t black_screen_req_raw{0};
+//				bool fail{CVhalDebugSystem::GetInstance().CheckFailSystem("F-VHAL-N-XXX",fail_ret)};
+//				if(true == fail)
+//				{
+//					/* ファイルが存在すれば、1111b：未確定を設定 */
+//					corrections.gv_sys_hud_type = 0b1111;
+//				}
+//#else
 				corrections.gv_sys_hud_type = AssembleLe8(data, parse_index);
+//#endif
 				parse_index++;
 				/* HUDサイズ */
 				corrections.gv_sys_hud_size = AssembleLe8(data, parse_index);
@@ -279,7 +340,7 @@ void CVhalHudScreenReceiver::NotifyHudDistortionCorrection(const std::vector<uin
 			/* 無効値の場合はHUD黒画要求を有効にする */
 			else
 			{
-				VHAL_LOGE("unknown black_screen_req. black_screen_req=0x%02X", static_cast<u_int32_t>(black_screen_req_raw));
+				VHAL_LOGE("unknown black_screen_req. black_screen_req=0x%02X", static_cast<uint32_t>(black_screen_req_raw));
 				const wlrenderer::HudDistortionCorrection corrections{};
 				p_hud_screen_controller_->ApplyHudDistortionCorrection(corrections, true);
 			}
@@ -303,6 +364,7 @@ void CVhalHudScreenReceiver::NotifyHudDistortionCorrection(const std::vector<uin
  処理概要：	HUD回転パラメータ通知
  引数    ：	const std::vector<uint8_t>& data	(i) 受信データ
  戻り値  ：	なし
+ フェールセーフNo  ：	F-VHAL-N-XXX, F-VHAL-N-XXX
 *****************************************************************************/
 void CVhalHudScreenReceiver::NotifyHudRotation(const std::vector<uint8_t>& data) noexcept
 {
@@ -311,9 +373,32 @@ void CVhalHudScreenReceiver::NotifyHudRotation(const std::vector<uint8_t>& data)
 	if (nullptr != p_hud_screen_controller_)
 	{
 		/* 受信データサイズの確認 */
-		if ((hud_rotation_size_ + 1U) == data.size())
+//#ifdef VHAL_SUPPORT_FAIL_SYSTEM
+//		/* HUD回転パラメータ通知(36h-45h)の通知サイズ異常(3byte以外)。*/
+//		int32_t fail_ret{0};
+//		size_t data_size{0};
+//		bool fail{CVhalDebugSystem::GetInstance().CheckFailSystem("F-VHAL-N-XXX",fail_ret)};
+//		if(true == fail)
+//		{
+//			data_size = static_cast<size_t>(fail_ret);
+//		}
+//#else
+		const size_t data_size{static_cast<size_t>(data.size())};
+//#endif
+		if ((hud_rotation_size_ + 1U) == data_size)
 		{
-			const uint16_t hud_rot_deg{AssembleLe16(data, 1U)};	/* HUD回転角度(単位:Deg LSB:0.01) */
+//#ifdef VHAL_SUPPORT_FAIL_SYSTEM
+//			/* HUD回転パラメータ通知(36h-45h)のHUD回転角度フィールドに-2550～2550、0以外の値が設定。*/
+//			fail_ret = 0;
+//			int16_t hud_rot_deg{0};
+//			bool fail{CVhalDebugSystem::GetInstance().CheckFailSystem("F-VHAL-N-XXX",fail_ret)};
+//			if(true == fail)
+//			{
+//				hud_rot_deg = static_cast<int16_t>(fail_ret);
+//			}
+//#else
+			const int16_t hud_rot_deg{static_cast<int16_t>(AssembleLe16(data, 1U))};	/* HUD回転角度(単位:Deg LSB:0.01) */
+//#endif
 			p_hud_screen_controller_->ApplyHudRotation(hud_rot_deg);
 		}
 		/* データサイズエラーの場合は通知を破棄 */
@@ -342,7 +427,7 @@ uint16_t CVhalHudScreenReceiver::AssembleLe16(const std::vector<uint8_t>& data, 
 	uint32_t assembled{0U};
 
 	if ((false == data.empty()) &&
-		((data.size() - 1U) >= idx))
+		((data.size() - 1U) > idx))
 	{
 		const uint8_t l_byte{static_cast<uint8_t>(data[idx])};
 		const uint8_t h_byte{static_cast<uint8_t>(data[idx + 1U])};
@@ -367,7 +452,7 @@ uint8_t CVhalHudScreenReceiver::AssembleLe8(const std::vector<uint8_t>& data, co
 {
 	uint8_t assembled{0U};
 
-	if (data.size() >= idx)
+	if (data.size() > idx)
 	{
 		assembled = static_cast<uint8_t>(data[idx]);
     }

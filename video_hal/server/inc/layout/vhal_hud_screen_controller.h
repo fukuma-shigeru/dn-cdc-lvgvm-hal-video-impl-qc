@@ -6,9 +6,7 @@
 #define VHAL_HUD_SCREEN_CONTROLLER_H
 
 #include <cstdint>
-#include <atomic>
 
-#include "vhal_log.h"
 #include "wl_renderer_public.h"
 #include "vhal_layout_mng.h"
 
@@ -31,8 +29,6 @@ public:
 
 	/* HUD制御再初期化(STR(レジューム時)) */
 	void ReInit(void) noexcept;
-	/* HUDスクリーン有効判定 (false:無効 / true:有効) */
-	bool IsHudScreenEnabled(void) const noexcept;
 
 	/* QNXからのHUD制御関連設定 */
 	/* HUD機能有無判定結果設定 */
@@ -40,7 +36,7 @@ public:
 	/* HUD歪み補正パラメータ設定 */
 	void ApplyHudDistortionCorrection(const wlrenderer::HudDistortionCorrection& corrections, const bool black) noexcept;
 	/* HUD回転パラメータ設定 */
-	void ApplyHudRotation(const uint16_t rot_deg) noexcept;
+	void ApplyHudRotation(const int16_t rot_deg) noexcept;
 
 private:
 	CVhalLayoutManager* p_layout_{nullptr};
@@ -57,6 +53,10 @@ private:
 
 	/* HUD歪み補正パラメータ保持用構造体 */
 	class HudCorrectionsState {
+	private:
+		wlrenderer::HudDistortionCorrection value{};
+		bool valid{false};
+
 	public:
 		void ClearCorrections(void) noexcept
 		{
@@ -68,7 +68,7 @@ private:
 			value = corrections;
 			valid = true;
 		}
-		const wlrenderer::HudDistortionCorrection& GetCorrections(void) const noexcept
+		wlrenderer::HudDistortionCorrection GetCorrections(void) const noexcept
 		{
 			return value;
 		}
@@ -76,27 +76,27 @@ private:
 		{
 			return valid;
 		}
-
-	private:
-		wlrenderer::HudDistortionCorrection value{};
-		bool valid{false};
 	};
 	HudCorrectionsState hud_corrections_;
 
 	/* HUD回転パラメータ保持用構造体 */
 	class HudRotationState {
+	private:
+		int16_t value{};
+		bool valid{false};
+
 	public:
 		void ClearRotation(void) noexcept
 		{
-			value = 0U;
+			value = 0;
 			valid = false;
 		}
-		void SetRotation(const uint16_t hud_rot_deg) noexcept
+		void SetRotation(const int16_t hud_rot_deg) noexcept
 		{
 			value = hud_rot_deg;
 			valid = true;
 		}
-		const uint16_t& GetRotation(void) const noexcept
+		int16_t GetRotation(void) const noexcept
 		{
 			return value;
 		}
@@ -104,10 +104,6 @@ private:
 		{
 			return valid;
 		}
-
-	private:
-		uint16_t value{};
-		bool valid{false};
 	};
 	HudRotationState hud_rotation_;
 
@@ -121,6 +117,8 @@ private:
 	bool IsHudStatusEnableAndBlackNoRequested(void) const noexcept;
 	/* HUD MUTEサーフェス設定 */
 	void SetHudMuteSurfaceVisible(const bool enabled) noexcept;
+	/* 通知パラメータ設定 共通処理 */
+	void SetHudParametersCommon(void) noexcept;
 	/* 保持しているHUD歪み補正パラメータ、HUD回転パラメータ設定をWaylandプラグインに設定 */
 	int32_t SetStoredHudParametersToWaylandPlugin(void) noexcept;
 };

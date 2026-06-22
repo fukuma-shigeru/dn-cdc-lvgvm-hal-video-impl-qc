@@ -384,7 +384,8 @@ extern "C" void MiconCommMiscControlDataNtyCallBack(const UINT8 data_type, void*
 	}
 	else
 	{
-		/* カメラ、HDMI、DISPLAY系コマンドについては、前回と内容同じならば通知しない */
+		/* カメラ、DISPLAYの通知について、前回と内容が同じの場合は通知しない */
+		/* HDMIについてはエラー時の通知が前回と内容が同じの場合は通知しない */
 		bool enabled{p_misc_control_->IsNotifyEnabled(len, p_cmd, data_type)};
 		if (true == enabled)
 		{
@@ -643,7 +644,6 @@ uint32_t CVhalMiconCommMiscControl::GetCtrlSts(void)
                     	F-VHAL-N-315
                     	F-VHAL-N-332
                     	F-VHAL-N-335
-                    	F-VHAL-N-346
 *****************************************************************************/
 bool CVhalMiconCommMiscControl::IsNotifyEnabled(const uint32_t data_size, const void* const data, const uint8_t data_type)
 {
@@ -787,65 +787,128 @@ bool CVhalMiconCommMiscControl::IsNotifyEnabled(const uint32_t data_size, const 
 		/* DISPLAY系 */
 		else if (kDatatypeDisplay == data_type)
 		{
-			/* 画質モード応答 (36h-02h) */
-			if (SUB_TYPE_DISP_MODE_RSP == sub_type)
-			{
-				/* 前回と内容同じならば通知対象外 */
-				if (cmd == cmd_dispmode_resp_)
-				{
-					result = false;
-				}
-				else
-				{
-					cmd_dispmode_resp_ = std::move(cmd);
-				}
-//#ifdef VHAL_SUPPORT_FAIL_SYSTEM	// F-VHAL-N-346
-//				int32_t value{0};
-//				CVhalDebugSystem::GetInstance().UpdateFailData("F-VHAL-N-346",value);
-//				if (0 != value)
-//				{
-//					result = false;
-//					VHAL_LOGW("fail F-VHAL-N-346");
-//				}
-//#endif
-			}
-			/* HUD機能有無判定結果通知 (36h-43h)*/
-			else if (static_cast<uint8_t>(SUB_TYPE_DISP_HUD_FUNC_STATUS) == sub_type)
-			{
-				if (cmd == cmd_disp_hud_func_status_)
-				{
-					result = false;
-				}
-				else
-				{
-					cmd_disp_hud_func_status_ = std::move(cmd);
-				}
-			}
-			/* HUD歪み補正パラメータ通知 (36h-44h)*/
-			else if (static_cast<uint8_t>(SUB_TYPE_DISP_HUD_DISTORTION_CORRECTION) == sub_type)
-			{
-				if (cmd == cmd_disp_hud_distortion_correction_)
-				{
-					result = false;
-				}
-				else
-				{
-					cmd_disp_hud_distortion_correction_ = std::move(cmd);
-				}
-			}
-			/* HUD回転パラメータ通知 (36h-45h)*/
-			else if (static_cast<uint8_t>(SUB_TYPE_DISP_HUD_ROTATION) == sub_type)
-			{
-				if (cmd == cmd_disp_hud_rotation_)
-				{
-					result = false;
-				}
-				else
-				{
-					cmd_disp_hud_rotation_ = std::move(cmd);
-				}
-			}
+			result = IsNotifyDisplayEnabled(cmd);
 		}
+	}
+
+	return result;
+}
+/*****************************************************************************
+ 処理概要：	通知イベント有効判定
+ 引数    ：	const std::vector<uint8_t> cmd	(i)受信データ
+ 戻り値  ：	判定結果
+           		true	通知有効
+           		false	通知無効
+ フェールセーフNo  ：	F-VHAL-N-346
+                    	F-VHAL-N-XXX
+                    	F-VHAL-N-XXX
+                    	F-VHAL-N-XXX
+*****************************************************************************/
+bool CVhalMiconCommMiscControl::IsNotifyDisplayEnabled(const std::vector<uint8_t> cmd)
+{
+	bool result{true};
+
+	if (false == cmd.empty())
+	{
+		const uint8_t	sub_type{cmd[0]};
+
+		/* 画質モード応答 (36h-02h) */
+		if (SUB_TYPE_DISP_MODE_RSP == sub_type)
+		{
+			/* 前回と内容同じならば通知対象外 */
+			if (cmd == cmd_dispmode_resp_)
+			{
+				result = false;
+			}
+			else
+			{
+				cmd_dispmode_resp_ = std::move(cmd);
+			}
+//#ifdef VHAL_SUPPORT_FAIL_SYSTEM	// F-VHAL-N-346
+//			int32_t value{0};
+//			CVhalDebugSystem::GetInstance().UpdateFailData("F-VHAL-N-346",value);
+//			if (0 != value)
+//			{
+//				result = false;
+//				VHAL_LOGW("fail F-VHAL-N-346");
+//			}
+//#endif
+		}
+		/* HUD機能有無判定結果通知 (36h-43h)*/
+		else if (static_cast<uint8_t>(SUB_TYPE_DISP_HUD_FUNC_STATUS) == sub_type)
+		{
+//#ifdef VHAL_SUPPORT_FAIL_SYSTEM
+//			/* HUD機能有無判定結果通知(36h-43h)未受信。*/
+//			int32_t value_hud_status{0};
+//			CVhalDebugSystem::GetInstance().UpdateFailData("F-VHAL-N-XXX", value_hud_status);
+//			if (0 != value_hud_status)
+//			{
+//				result = false;
+//				VHAL_LOGW("fail F-VHAL-N-XXX");
+//			}
+//#else
+			if (cmd == cmd_disp_hud_func_status_)
+			{
+				result = false;
+			}
+			else
+			{
+				cmd_disp_hud_func_status_ = std::move(cmd);
+			}
+//#endif
+		}
+		/* HUD歪み補正パラメータ通知 (36h-44h)*/
+		else if (static_cast<uint8_t>(SUB_TYPE_DISP_HUD_DISTORTION_CORRECTION) == sub_type)
+		{
+//#ifdef VHAL_SUPPORT_FAIL_SYSTEM
+//			/* HUD歪み補正パラメータ通知(36h-44h)未受信。*/
+//			int32_t value_hud_correction{0};
+//			CVhalDebugSystem::GetInstance().UpdateFailData("F-VHAL-N-XXX", value_hud_correction);
+//			if (0 != value_hud_correction)
+//			{
+//				result = false;
+//				VHAL_LOGW("fail F-VHAL-N-XXX");
+//			}
+//#else
+			if (cmd == cmd_disp_hud_distortion_correction_)
+			{
+				result = false;
+			}
+			else
+			{
+				cmd_disp_hud_distortion_correction_ = std::move(cmd);
+			}
+//#endif
+		}
+		/* HUD回転パラメータ通知 (36h-45h)*/
+		else if (static_cast<uint8_t>(SUB_TYPE_DISP_HUD_ROTATION) == sub_type)
+		{
+//#ifdef VHAL_SUPPORT_FAIL_SYSTEM
+//			/* HUD回転パラメータ通知(36h-45h)未受信。*/
+//			int32_t value_hud_rotation{0};
+//			CVhalDebugSystem::GetInstance().UpdateFailData("F-VHAL-N-XXX", value_hud_rotation);
+//			if (0 != value_hud_rotation)
+//			{
+//				result = false;
+//				VHAL_LOGW("fail F-VHAL-N-XXX");
+//			}
+//#else
+			if (cmd == cmd_disp_hud_rotation_)
+			{
+				result = false;
+			}
+			else
+			{
+				cmd_disp_hud_rotation_ = std::move(cmd);
+			}
+//#endif
+		}
+	}
+	else
+	{
+		/* 受信データが空の場合、通知無効 */
+		VHAL_LOGW("cmd is empty");
+		result = false;
 	}
 
 	return result;

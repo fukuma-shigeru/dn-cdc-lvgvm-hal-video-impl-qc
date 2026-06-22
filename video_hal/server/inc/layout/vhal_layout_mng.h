@@ -248,6 +248,9 @@ public:
 	/* 前席映像同期面MUTE設定 */
 	int32_t SetBrinderSync(const VhalMuteFrontReason reason, const bool mute);
 
+	/*HUD スクリーン有効判定 */
+	bool IsHudScreenAvailable(void) const;
+
 private:
 	/* レイアウトファイルの読み込み */
 	int32_t ReadLayoutFile(const std::string& filePath);

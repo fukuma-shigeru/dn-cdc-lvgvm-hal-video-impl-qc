@@ -36,7 +36,7 @@ int32_t CVhalHudScreenController::Initialize(CVhalLayoutManager * const p_layout
 		p_layout_ = p_layout_mng;
 		p_renderer_ = p_wayland_renderer;
 		/* HUDスクリーン有効判定結果を取得して保持 */
-		hud_screen_available_ = IsHudScreenEnabled();
+		hud_screen_available_ = p_layout_->IsHudScreenAvailable();
 	}
 	else
 	{
@@ -114,19 +114,8 @@ void CVhalHudScreenController::ApplyHudFunctionStatus(const bool func) noexcept
 		/* HUD機能有、かつ黒画表示要求無の場合 */
 		if (true == IsHudStatusEnableAndBlackNoRequested())
 		{
-			/* 保持しているHUD歪み補正パラメータ、HUD回転パラメータ設定をWaylandプラグインに設定 */
-			const int32_t ret{SetStoredHudParametersToWaylandPlugin()};
-			if (WL_RENDERER_SUCCESS == ret)
-			{
-				/* HUD MUTEサーフェス設定(非表示) */
-				SetHudMuteSurfaceVisible(false);
-			}
-			/* Waylandプラグイン設定失敗の場合は、HUD MUTEサーフェス設定(表示) */
-			else
-			{
-				/* HUD MUTEサーフェス設定(表示) */
-				SetHudMuteSurfaceVisible(true);		
-			}
+			/* 通知パラメータ設定 共通処理 */
+			SetHudParametersCommon();
 		}
 		/* HUD機能無、又は黒画表示要求有の場合 */
 		else
@@ -137,7 +126,7 @@ void CVhalHudScreenController::ApplyHudFunctionStatus(const bool func) noexcept
 	/* HUDスクリーン無効の場合は、設定をスキップ */
 	else
 	{
-		VHAL_LOGE("HUD screen is disabled. skip applying HUD function status.");
+		VHAL_LOGV("HUD screen is disabled. skip applying HUD function status.");
 	}
 
 	VHAL_LOGV_OUT();
@@ -169,19 +158,8 @@ void CVhalHudScreenController::ApplyHudDistortionCorrection(const wlrenderer::Hu
 			/* HUD機能有、かつ黒画表示要求無の場合 */
 			if (true == IsHudStatusEnableAndBlackNoRequested())
 			{
-				/* WaylandプラグインにHUD歪み補正パラメータを設定 */
-				const int32_t ret{SetStoredHudParametersToWaylandPlugin()};
-				if (WL_RENDERER_SUCCESS == ret)
-				{
-					/* HUD MUTEサーフェス設定(非表示) */
-					SetHudMuteSurfaceVisible(false);
-				}
-				/* Waylandプラグイン設定失敗の場合は、HUD MUTEサーフェス設定(表示) */
-				else
-				{
-					/* HUD MUTEサーフェス設定(表示) */
-					SetHudMuteSurfaceVisible(true);		
-				}
+				/* 通知パラメータ設定 共通処理 */
+				SetHudParametersCommon();
 			}
 			/* HUD機能無、又は黒画表示要求有の場合 */
 			else
@@ -190,7 +168,7 @@ void CVhalHudScreenController::ApplyHudDistortionCorrection(const wlrenderer::Hu
 				SetHudMuteSurfaceVisible(true);
 
 				/* HUD歪み補正パラメータは保持したままにして、
-				   HUD機能有、かつ黒画表示要求無になった時にWayandプラグインに設定する */
+				   HUD機能有、かつ黒画表示要求無になった時にWaylandプラグインに設定する */
 			}
 		}
 		else
@@ -201,7 +179,7 @@ void CVhalHudScreenController::ApplyHudDistortionCorrection(const wlrenderer::Hu
 	/* HUDスクリーン無効の場合は、設定をスキップ */
 	else
 	{
-		VHAL_LOGE("HUD screen is disabled. skip applying HUD distortion correction.");
+		VHAL_LOGV("HUD screen is disabled. skip applying HUD distortion correction.");
 	}
 
 	VHAL_LOGV_OUT();
@@ -209,10 +187,10 @@ void CVhalHudScreenController::ApplyHudDistortionCorrection(const wlrenderer::Hu
 
 /*****************************************************************************
  処理概要：	HUD回転パラメータ設定
- 引数    ：	const uint16_t rot_deg	(i)	HUD回転角度(単位:Deg LSB:0.01)	
+ 引数    ：	const int16_t rot_deg	(i)	HUD回転角度(単位:Deg LSB:0.01)	
  戻り値  ：	なし
 *****************************************************************************/
-void CVhalHudScreenController::ApplyHudRotation(const uint16_t rot_deg) noexcept
+void CVhalHudScreenController::ApplyHudRotation(const int16_t rot_deg) noexcept
 {
 	VHAL_LOGV_IN();
 
@@ -227,23 +205,11 @@ void CVhalHudScreenController::ApplyHudRotation(const uint16_t rot_deg) noexcept
 			/* HUD機能有、かつ黒画表示要求無の場合 */
 			if (true == IsHudStatusEnableAndBlackNoRequested())
 			{
-				/* WaylandプラグインにHUD回転パラメータを設定 */
-				const int32_t ret{SetStoredHudParametersToWaylandPlugin()};
-				/* Waylandプラグイン設定成功の場合は、HUD MUTEサーフェス設定(非表示) */
-				if (WL_RENDERER_SUCCESS == ret)
-				{
-					/* HUD MUTEサーフェス設定(非表示) */
-					SetHudMuteSurfaceVisible(false);
-				}
-				/* Waylandプラグイン設定失敗の場合は、HUD MUTEサーフェス設定(表示) */
-				else
-				{
-					/* HUD MUTEサーフェス設定(表示) */
-					SetHudMuteSurfaceVisible(true);
-				}
+				/* 通知パラメータ設定 共通処理 */
+				SetHudParametersCommon();
 			}
 			/* HUD機能無、又は黒画表示要求有の場合は、HUD回転パラメータを保持したままにして、
-			   HUD機能有、かつ黒画表示要求無になった時にWayandプラグインに設定する */
+			   HUD機能有、かつ黒画表示要求無になった時にWaylandプラグインに設定する */
 		}
 		else
 		{
@@ -253,46 +219,10 @@ void CVhalHudScreenController::ApplyHudRotation(const uint16_t rot_deg) noexcept
 	/* HUDスクリーン無効の場合は、設定をスキップ */
 	else
 	{
-		VHAL_LOGE("HUD screen is disabled. skip applying HUD rotation.");
+		VHAL_LOGV("HUD screen is disabled. skip applying HUD rotation.");
 	}
 
 	VHAL_LOGV_OUT();
-}
-
-/*****************************************************************************
- 処理概要：	HUDスクリーン有効判定
- 引数    ：	なし
- 戻り値  ：	HUDスクリーン判定結果(有効:true/無効:false)
-*****************************************************************************/
-bool CVhalHudScreenController::IsHudScreenEnabled(void) const noexcept
-{
-	VHAL_LOGV_IN();
-
-	bool available{false};
-
-	if (nullptr != p_layout_)
-	{
-		int32_t screen_id_hud{-1};
-		/* HUDスクリーンID取得 */
-		const int32_t ret{p_layout_->GetScreenIdHud(screen_id_hud)};
-		if (VHAL_SUCCESS == ret)
-		{
-			/* スクリーン有効判定 */
-			available = p_layout_->IsScreenAvailable(screen_id_hud);
-		}
-		else
-		{
-			VHAL_LOGI("GetScreenIdHud nothing ret=%d", ret);
-		}
-	}
-	else
-	{
-		VHAL_LOGE("layout manager is not initialized");
-	}
-
-	VHAL_LOGV_OUT();
-
-	return available;
 }
 
 /*****************************************************************************	
@@ -398,6 +328,28 @@ void CVhalHudScreenController::SetHudMuteSurfaceVisible(const bool enabled) noex
 }
 
 /*****************************************************************************
+ 処理概要：	通知パラメータ設定 共通処理
+ 引数    ：	なし
+ 戻り値  ：	なし
+*****************************************************************************/
+void CVhalHudScreenController::SetHudParametersCommon(void) noexcept
+{
+	/* WaylandプラグインにHUD回転パラメータを設定 */
+	const int32_t ret{SetStoredHudParametersToWaylandPlugin()};
+	/* Waylandプラグイン設定成功の場合は、HUD MUTEサーフェス設定(非表示) */
+	if (WL_RENDERER_SUCCESS == ret)
+	{
+		/* HUD MUTEサーフェス設定(非表示) */
+		SetHudMuteSurfaceVisible(false);
+	}
+	/* Waylandプラグイン設定失敗の場合は、HUD MUTEサーフェス設定(表示) */
+	else
+	{
+		/* HUD MUTEサーフェス設定(表示) */
+		SetHudMuteSurfaceVisible(true);
+	}
+}
+/*****************************************************************************
  処理概要：	保持しているHUD歪み補正パラメータ、HUD回転パラメータ設定をWaylandプラグインに設定 
  引数    ：	なし
  戻り値  ：	処理結果
@@ -435,7 +387,7 @@ int32_t CVhalHudScreenController::SetStoredHudParametersToWaylandPlugin(void) no
 			/* 保持済みのHUD回転パラメータがあれば、Waylandプラグインに設定 */
 			if (true == hud_rotation_.HasRotation())
 			{
-				const uint16_t rotation{hud_rotation_.GetRotation()};
+				const int16_t rotation{hud_rotation_.GetRotation()};
 				ret	= p_renderer_->SetHudRotation(rotation);
 				if (WL_RENDERER_SUCCESS != ret)
 				{

@@ -128,6 +128,7 @@ private:
 	wlrenderer::CWaylandRendererVideo*	p_blinder_video_sync_;
 	wlrenderer::CWaylandRendererVideo*	p_blinder_camera_;
 	wlrenderer::CWaylandRendererVideo*	p_blinder_background_;
+	wlrenderer::CWaylandRendererVideo*	p_blinder_display_hud_;
 	std::unique_ptr<wlrenderer::CWaylandRendererConfig>	p_blinder_config_;
 	bool		initialized_;
 	bool		camera_mute_sync_;		/* カメラ同期状態によるMUTE設定	true:MUTE ON/false:MUTE OFF */
@@ -155,6 +156,9 @@ private:
 	void SetNotifyCameraChanged(const bool value);
 	/* カメラ映像切替通知 */
 	void NotifyCameraChanged(const int32_t result);
+
+	/* HUDディスプレイ全体のMUTE用のWaylandRendererVideo作成 */
+	wlrenderer::CWaylandRendererVideo* CreateHudBlinder(const VhalBlinderType blinder_hud, const int32_t blinder_color, const bool mute_init, wlrenderer::CWaylandRenderer * const p_renderer) noexcept;
 };
 
 extern "C" void MuteReleaseMuteCameraOn(void* const arg);

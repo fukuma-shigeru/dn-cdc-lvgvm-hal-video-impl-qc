@@ -173,6 +173,9 @@ public:
 private:
 	CVhalEventRoute* p_event_route_{nullptr};
 
+	/* Display用通知イベント有効判定 */
+	bool IsNotifyDisplayEnabled(const std::vector<uint8_t> cmd);
+
 	mutable std::mutex mtx_recv_item_;
 
 	/* ReceiveItemリスト */

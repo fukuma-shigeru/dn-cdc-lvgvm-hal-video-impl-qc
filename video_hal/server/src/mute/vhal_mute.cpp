@@ -72,6 +72,7 @@ CVhalMute::CVhalMute(void)
 	,p_micon_most_video_info_(nullptr)
 	,p_renderer_(nullptr)
 	,p_blinder_display_(nullptr)
+	,p_blinder_display_hud_(nullptr)
 	,p_blinder_video_(nullptr)
 	,p_blinder_video_sync_(nullptr)
 	,p_blinder_camera_(nullptr)
@@ -219,7 +220,6 @@ int32_t CVhalMute::Initialize(CVhalMainControl * const p_main_control, CVhalLayo
 							p_blinder_config_->SetFormat(format);
 							
 							p_layout_mng_->SetBlinderFrontDispMuteInit(mute_init);
-							p_layout_mng_->SetBlinderHudDispMuteInit(mute_init);
 
 							/* 前席ディスプレイ全体のMUTE用のWaylandRendererVideo作成 */
 							ret = p_layout_mng_->GetBlinderID(VhalBlinderType::VHAL_BLINDER_TYPE_FRONT_DISPLAY, ivi_id_front);
@@ -378,51 +378,11 @@ int32_t CVhalMute::Initialize(CVhalMainControl * const p_main_control, CVhalLayo
 								VHAL_LOGW("CreateBlinder(blinder_background) error.");
 							}
 
-							int32_t screen_id_hud{-1};
-							ret = p_layout_mng_->GetScreenIdHud(screen_id_hud);
-							if (VHAL_SUCCESS == ret)
+							/* HUDディスプレイ全体のMUTE用のWaylandRendererVideo作成 */
+							p_blinder_display_hud_ = CreateHudBlinder(VhalBlinderType::VHAL_BLINDER_TYPE_HUD_DISPLAY, kVhalBlinderColorDisplay, mute_init, p_renderer_);
+							if (nullptr == p_blinder_display_hud_)
 							{
-								const bool hud_available{p_layout_mng_->IsScreenAvailable(screen_id_hud)};
-								if (true == hud_available)
-								{
-									int32_t ivi_id_hud{0};
-									/* HUDのMUTE用のWaylandRendererVideo作成 */
-									p_layout_mng_->SetBlinderHudDispMuteInit(mute_init);
-									ret = p_layout_mng_->GetBlinderID(VhalBlinderType::VHAL_BLINDER_TYPE_HUD_DISPLAY, ivi_id_hud);
-									if (VHAL_SUCCESS != ret)
-									{
-										VHAL_LOGW("GetBlinderID(hud display) error. ret=%d", ret);
-									}
-									else
-									{
-										p_blinder_config_->AddSurfaceId(ivi_id_hud);
-									}
-									if (0 != ivi_id_hud)
-									{
-										p_blinder_video_ = p_renderer_->CreateRendererVideo(*p_blinder_config_);
-										if (nullptr == p_blinder_video_)
-										{
-											VHAL_LOGW("CreateClientVideo(blinder_video) error.");
-										}
-										else
-										{
-											ret = InitBlinder(p_blinder_video_, kVhalBlinderColorVideo, p_blinder_config_.get());
-											if (0 > ret)
-											{
-												VHAL_LOGW("InitBlinder(p_blinder_video_) error. ret=%d", ret);
-											}
-										}
-									}
-								}
-								else
-								{
-									VHAL_LOGE("HUD screen is not available.");
-								}
-								p_blinder_config_->ClearSurfaceId();
-							}
-							else
-							{
-								VHAL_LOGI("HUD screen not found layout.");
+								VHAL_LOGW("CreateBlinder(p_blinder_display_hud_) error.");
 							}
 						}
 					}
@@ -432,6 +392,83 @@ int32_t CVhalMute::Initialize(CVhalMainControl * const p_main_control, CVhalLayo
 	}
 
 	return result;
+}
+
+/*****************************************************************************
+ 処理概要：	HUDディスプレイ全体のMUTE用のWaylandRendererVideo作成
+ 引数    ：	const VhalBlinderType blinder_hud				(i)HUDのブラインダー種別
+		   	const int32_t blinder_color						(i)ブラインダーの色
+		   	const bool mute_init							(i)true MUTE有効/false MUTE無効
+		   	wlrenderer::CWaylandRenderer * const p_renderer	(i)WaylandRendererインスタンスポインタ
+ 戻り値  ：	処理結果
+ 戻り値  ：	CWaylandRendererVideoインスタンスポインタ
+*****************************************************************************/
+wlrenderer::CWaylandRendererVideo* CVhalMute::CreateHudBlinder(const VhalBlinderType blinder_hud, const int32_t blinder_color, const bool mute_init, wlrenderer::CWaylandRenderer * const p_renderer) noexcept
+{
+	int32_t screen_id_hud{-1};
+	int32_t ret{VHAL_SUCCESS};
+	wlrenderer::CWaylandRendererVideo *p_blinder{nullptr};
+
+	if ((nullptr == p_layout_mng_) || (nullptr == p_blinder_config_))
+	{
+		VHAL_LOGE("p_layout_mng_ is nullptr or p_blinder_config_ is nullptr.");
+		ret = VHAL_ERR_PARAM;
+	}
+
+	if (VHAL_SUCCESS == ret)
+	{
+		/* HUDのスクリーンID取得 */
+		if (VHAL_SUCCESS == p_layout_mng_->GetScreenIdHud(screen_id_hud))
+		{
+			/* HUDスクリーンチェック */
+			const bool hud_available{p_layout_mng_->IsScreenAvailable(screen_id_hud)};
+			if (true == hud_available)
+			{
+				int32_t ivi_id_hud{0};
+				/* HUDのMUTE初期化設定(visible) */
+				p_layout_mng_->SetBlinderHudDispMuteInit(mute_init);
+				/* HUDのMUTE用サーフェスID取得 */
+				ret = p_layout_mng_->GetBlinderID(blinder_hud, ivi_id_hud);
+				if (VHAL_SUCCESS != ret)
+				{
+					VHAL_LOGW("GetBlinderID(hud display) error. ret=%d", ret);
+				}
+				else
+				{
+					p_blinder_config_->AddSurfaceId(ivi_id_hud);
+					/* Videoインスタンスの作成 */
+					p_blinder = p_renderer_->CreateRendererVideo(*p_blinder_config_);
+					if (nullptr ==  p_blinder)
+					{
+						VHAL_LOGW("CreateClientVideo(blinder_display_hud) error.");
+					}
+					else
+					{
+						/* ブラインダーの初期化 */
+						ret = InitBlinder(p_blinder, blinder_color, p_blinder_config_.get());
+						if (VHAL_SUCCESS != ret)
+						{
+							/* Videoインスタンスの除去 */
+							p_renderer_->RemoveRendererVideo(p_blinder);
+							p_blinder = nullptr;
+							VHAL_LOGW("InitBlinder error. ret=%d", ret);
+						}
+					}
+					p_blinder_config_->ClearSurfaceId();
+				}
+			}
+			else
+			{
+				VHAL_LOGE("HUD screen is not available.");
+			}
+		}
+		else
+		{
+			/* HUDのスクリーンID取得失敗時はエラーリターンとしない */
+			VHAL_LOGI("HUD screen not found layout.");
+		}
+	}
+	return p_blinder;
 }
 
 /*****************************************************************************
@@ -455,6 +492,11 @@ void CVhalMute::Finalize(void)
 	{
 		p_renderer_->RemoveRendererVideo(p_blinder_display_);
 		p_blinder_display_ = nullptr;
+	}
+	if (nullptr != p_blinder_display_hud_)
+	{
+		p_renderer_->RemoveRendererVideo(p_blinder_display_hud_);
+		p_blinder_display_hud_ = nullptr;
 	}
 	if (nullptr != p_blinder_video_)
 	{
