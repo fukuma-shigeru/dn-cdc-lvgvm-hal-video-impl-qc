@@ -40,8 +40,7 @@ int32_t CVhalHudScreenController::Initialize(CVhalLayoutManager * const p_layout
 	}
 	else
 	{
-		VHAL_LOGE("parameter error. p_layout_mng=%p p_wayland_renderer=%p",
-			static_cast<const void*>(p_layout_mng), static_cast<const void*>(p_wayland_renderer));
+		VHAL_LOGE("playout manager or renderer is not initialized");
 		p_layout_ = nullptr;
 		p_renderer_ = nullptr;
 		ret = VHAL_ERR_PARAM;
@@ -337,7 +336,7 @@ void CVhalHudScreenController::SetHudParametersCommon(void) noexcept
 	/* WaylandプラグインにHUD回転パラメータを設定 */
 	const int32_t ret{SetStoredHudParametersToWaylandPlugin()};
 	/* Waylandプラグイン設定成功の場合は、HUD MUTEサーフェス設定(非表示) */
-	if (WL_RENDERER_SUCCESS == ret)
+	if (VHAL_SUCCESS == ret)
 	{
 		/* HUD MUTEサーフェス設定(非表示) */
 		SetHudMuteSurfaceVisible(false);
@@ -353,14 +352,14 @@ void CVhalHudScreenController::SetHudParametersCommon(void) noexcept
  処理概要：	保持しているHUD歪み補正パラメータ、HUD回転パラメータ設定をWaylandプラグインに設定 
  引数    ：	なし
  戻り値  ：	処理結果
-            	WL_RENDERER_SUCCESS		正常終了
-            	WL_RENDERER_SUCCESS以外	異常終了
+           		VHAL_ERR_****		エラー
+           		VHAL_SUCCESS		正常終了
 *****************************************************************************/
 int32_t CVhalHudScreenController::SetStoredHudParametersToWaylandPlugin(void) noexcept
 {
 	VHAL_LOGV_IN();
 
-	int32_t ret{WL_RENDERER_SUCCESS};
+	int32_t ret{VHAL_SUCCESS};
 
 	if (nullptr != p_renderer_)
 	{
@@ -368,35 +367,37 @@ int32_t CVhalHudScreenController::SetStoredHudParametersToWaylandPlugin(void) no
 		if (true == hud_corrections_.HasCorrections())
 		{
 			const wlrenderer::HudDistortionCorrection corrections{hud_corrections_.GetCorrections()};
-			ret = p_renderer_->SetHudDistortionCorrection(corrections);
-			if (WL_RENDERER_SUCCESS != ret)
+			const int32_t wl_ret{p_renderer_->SetHudDistortionCorrection(corrections)};
+			if (WL_RENDERER_SUCCESS != wl_ret)
 			{
 				/* エラーは初回の１回のみログ出力 */
 				if (false == set_distortion_log_once_)
 				{
-					VHAL_LOGE("NG ret=%d", ret);
+					VHAL_LOGE("NG wl_ret=%d", wl_ret);
 					set_distortion_log_once_ = true;
 				}
+				ret = VHAL_ERR_WAYLAND_CLIENT;
 			}
 			/* 成功、失敗に関わらず保持しているHUD歪み補正パラメータをクリア */
 			hud_corrections_.ClearCorrections();
 		}
 
-		if (WL_RENDERER_SUCCESS == ret)
+		if (VHAL_SUCCESS == ret)
 		{
 			/* 保持済みのHUD回転パラメータがあれば、Waylandプラグインに設定 */
 			if (true == hud_rotation_.HasRotation())
 			{
 				const uint16_t rotation{hud_rotation_.GetRotation()};
-				ret	= p_renderer_->SetHudRotation(rotation);
-				if (WL_RENDERER_SUCCESS != ret)
+				const int32_t wl_ret{p_renderer_->SetHudRotation(rotation)};
+				if (WL_RENDERER_SUCCESS != wl_ret)
 				{
 					/* エラーは初回の１回のみログ出力 */
 					if (false == set_rotation_log_once_)
 					{
-						VHAL_LOGE("NG ret=%d", ret);
+						VHAL_LOGE("NG wl_ret=%d", wl_ret);
 						set_rotation_log_once_ = true;
 					}
+					ret = VHAL_ERR_WAYLAND_CLIENT;
 				}
 				/* 成功、失敗に関わらず保持しているHUD回転パラメータをクリア */
 				hud_rotation_.ClearRotation();
@@ -405,7 +406,7 @@ int32_t CVhalHudScreenController::SetStoredHudParametersToWaylandPlugin(void) no
 	}
 	else
 	{
-		ret = WL_RENDERER_ERR;
+		ret = VHAL_ERR_NOT_INITIALIZED;
 		VHAL_LOGE("renderer is not initialized");
 	}
 

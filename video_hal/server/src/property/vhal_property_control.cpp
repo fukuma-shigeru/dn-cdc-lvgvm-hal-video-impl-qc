@@ -7196,11 +7196,9 @@ int32_t CVhalPropertyControl::UpdateSettingStatusDisplay(const int32_t screen_id
 		int32_t front_screen_id{-1};
 		int32_t rear_screen_id{-1};
 		int32_t ic_screen_id{-1};
-		int32_t hud_screen_id{-1};
 		const int32_t front_ret{p_layout_mng_->GetScreenIdFront(front_screen_id)};
 		const int32_t rear_ret{p_layout_mng_->GetScreenIdRear(rear_screen_id)};
 		const int32_t ic_ret{p_layout_mng_->GetScreenIdICluster(ic_screen_id)};
-		const int32_t hud_ret{p_layout_mng_->GetScreenIdHud(hud_screen_id)};
 		std::string update_name{};
 		std::string update_name_width{};
 		std::string update_name_height{};
@@ -7231,13 +7229,6 @@ int32_t CVhalPropertyControl::UpdateSettingStatusDisplay(const int32_t screen_id
 			update_name = VHAL_PROP_SETTING_STS_DISP_ICLUSTER;
 			update_name_width = VHAL_PROP_SETTING_STS_DISP_ICLUSTER_WIDTH;
 			update_name_height = VHAL_PROP_SETTING_STS_DISP_ICLUSTER_HEIGHT;
-		}
-		/* HUD スクリーンID */
-		else if ((VHAL_SUCCESS == hud_ret) && (hud_screen_id == screen_id))
-		{
-			VHAL_LOGI("HUD screen_id=%d, display=%d, resolution=(%dx%d)", screen_id, display, width, height);
-			/* HUDはプロパティ更新対象外の為、早期リターンする */
-			return VHAL_SUCCESS;
 		}
 		else
 		{

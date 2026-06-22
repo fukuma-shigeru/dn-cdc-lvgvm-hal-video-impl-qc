@@ -152,7 +152,6 @@ void CVhalHudScreenReceiver::NotifyHudFunctionStatus(const std::vector<uint8_t>&
 	{
 		/* 受信データサイズの確認 */
 //#ifdef VHAL_SUPPORT_FAIL_SYSTEM
-//		/* HUD機能有無判定結果通知(36h-43h)の通知サイズ異常(2byte以外) */
 //		int32_t fail_ret{0};
 //		size_t data_size{0};
 //		bool fail{CVhalDebugSystem::GetInstance().CheckFailSystem("F-VHAL-N-XXX",fail_ret)};
@@ -171,7 +170,6 @@ void CVhalHudScreenReceiver::NotifyHudFunctionStatus(const std::vector<uint8_t>&
 			};
 			/* HUD機能有無判定結果(0：機能無 1：機能有) */
 //#ifdef VHAL_SUPPORT_FAIL_SYSTEM
-//			/* HUD機能有無判定結果通知(36h-43h)のHUD機能有無判定結果フィールド値が機能無、機能有以外。*/
 //			fail_ret = 0;
 //			uint8_t hud_func_raw{0};
 //			bool fail{CVhalDebugSystem::GetInstance().CheckFailSystem("F-VHAL-N-XXX",fail_ret)};
@@ -228,8 +226,7 @@ void CVhalHudScreenReceiver::NotifyHudDistortionCorrection(const std::vector<uin
 	if (nullptr != p_hud_screen_controller_)
 	{
 		/* 受信データサイズの確認 */
-//#ifdef VHAL_SUPPORT_FAIL_SYSTEM
-//		/* HUD歪み補正パラメータ通知(36h-44h)の通知サイズ異常(137byte以外)。*/
+//#ifdef VHAL_SUPPORT_FAIL_SYSTEM	// HUD歪み補正パラメータ通知(36h-44h)の通知サイズ異常(137byte以外)
 //		int32_t fail_ret{0};
 //		size_t data_size{0};
 //		bool fail{CVhalDebugSystem::GetInstance().CheckFailSystem("F-VHAL-N-XXX",fail_ret)};
@@ -246,8 +243,7 @@ void CVhalHudScreenReceiver::NotifyHudDistortionCorrection(const std::vector<uin
 				no_black = 0x00U,
 				black = 0x01U,
 			};
-//#ifdef VHAL_SUPPORT_FAIL_SYSTEM
-//			/* HUD歪み補正パラメータ通知(36h-44h)の黒画表示要求フィールド値が機黒画表示要求なし、黒画表示要求あり以外。*/
+//#ifdef VHAL_SUPPORT_FAIL_SYSTEM		// hUD歪み補正パラメータ通知(36h-44h)の黒画表示要求フィールド値が機黒画表示要求なし/あり以外
 //			fail_ret = 0;
 //			uint8_t black_screen_req_raw{0};
 //			bool fail{CVhalDebugSystem::GetInstance().CheckFailSystem("F-VHAL-N-XXX",fail_ret)};
@@ -264,15 +260,11 @@ void CVhalHudScreenReceiver::NotifyHudDistortionCorrection(const std::vector<uin
 				wlrenderer::HudDistortionCorrection corrections{};
 				size_t parse_index{1U};	/* データは opcode の次（index 1）から開始 */
 				/* HUDタイプ */
-//#ifdef VHAL_SUPPORT_FAIL_SYSTEM
-//				/* HUD歪み補正パラメータ通知(36h-44h)の黒画表示要求フィールドが"黒画表示要求なし"で
-//				   その他の各フィールドにreserved値、未確定値、無効値が設定。*/
+//#ifdef VHAL_SUPPORT_FAIL_SYSTEM	// HUD歪み補正パラメータ通知(36h-44h)の黒画表示要求フィールドが"黒画表示要求なしで、フィールドにreserved値、未確定値、無効値が設定
 //				fail_ret = 0;
 //				uint8_t black_screen_req_raw{0};
 //				bool fail{CVhalDebugSystem::GetInstance().CheckFailSystem("F-VHAL-N-XXX",fail_ret)};
-//				if(true == fail)
-//				{
-//					/* ファイルが存在すれば、1111b：未確定を設定 */
+//				if(true == fail//				{
 //					corrections.gv_sys_hud_type = 0b1111;
 //				}
 //#else
@@ -304,28 +296,35 @@ void CVhalHudScreenReceiver::NotifyHudDistortionCorrection(const std::vector<uin
 				corrections.gv_vipos_avail_width = AssembleLe16(data, parse_index);
 				parse_index += 2U;
 				/* 画像標準値 x座標 point 1～15 */
+				size_t w_idx{parse_index};		/* CERT INT30-C対策 */
 				for (size_t i{0U}; i < wlrenderer::kHudCoordinates; ++i)
 				{
-					corrections.gv_vipos_basept_x[i] = AssembleLe16(data, parse_index);
-					parse_index += 2U;
+					corrections.gv_vipos_basept_x[i] = AssembleLe16(data, w_idx);
+					w_idx += 2U;
 				}
+				parse_index += wlrenderer::kHudCoordinates;
+				w_idx = parse_index;			/* CERT INT30-C対策 */
 				/* 画像標準値 y座標 point 1～15 */
 				for (size_t i{0U}; i < wlrenderer::kHudCoordinates; ++i)
 				{
-					corrections.gv_vipos_basept_y[i] = AssembleLe16(data, parse_index);
-					parse_index += 2U;
+					corrections.gv_vipos_basept_y[i] = AssembleLe16(data, w_idx);
+					w_idx += 2U;
 				}
+				parse_index += wlrenderer::kHudCoordinates;
+				w_idx = parse_index;			/* CERT INT30-C対策 */
 				/* 画像補正値 x座標 point 1～15 */
 				for (size_t i{0U}; i < wlrenderer::kHudCoordinates; ++i)
 				{
-					corrections.gv_vipos_adjpt_x[i] = AssembleLe16(data, parse_index);
-					parse_index += 2U;
+					corrections.gv_vipos_adjpt_x[i] = AssembleLe16(data, w_idx);
+					w_idx += 2U;
 				}
 				/* 画像補正値 y座標 point 1～15 */
+				parse_index += wlrenderer::kHudCoordinates;
+				w_idx = parse_index;			/* CERT INT30-C対策 */
 				for (size_t i{0U}; i < wlrenderer::kHudCoordinates; ++i)
 				{
-					corrections.gv_vipos_adjpt_y[i] = AssembleLe16(data, parse_index);
-					parse_index += 2U;
+					corrections.gv_vipos_adjpt_y[i] = AssembleLe16(data, w_idx);
+					w_idx += 2U;
 				}
 
 				/* HUD歪み補正パラメータ設定 */
@@ -334,14 +333,14 @@ void CVhalHudScreenReceiver::NotifyHudDistortionCorrection(const std::vector<uin
 			/* 黒画表示要求ありの場合 */
 			else if (static_cast<uint8_t>(HudBlackRequest::black) == black_screen_req_raw)
 			{
-				const wlrenderer::HudDistortionCorrection corrections{};
+				constexpr wlrenderer::HudDistortionCorrection corrections{};
 				p_hud_screen_controller_->ApplyHudDistortionCorrection(corrections, true);
 			}
 			/* 無効値の場合はHUD黒画要求を有効にする */
 			else
 			{
 				VHAL_LOGE("unknown black_screen_req. black_screen_req=0x%02X", static_cast<uint32_t>(black_screen_req_raw));
-				const wlrenderer::HudDistortionCorrection corrections{};
+				constexpr wlrenderer::HudDistortionCorrection corrections{};
 				p_hud_screen_controller_->ApplyHudDistortionCorrection(corrections, true);
 			}
 		}
@@ -373,8 +372,7 @@ void CVhalHudScreenReceiver::NotifyHudRotation(const std::vector<uint8_t>& data)
 	if (nullptr != p_hud_screen_controller_)
 	{
 		/* 受信データサイズの確認 */
-//#ifdef VHAL_SUPPORT_FAIL_SYSTEM
-//		/* HUD回転パラメータ通知(36h-45h)の通知サイズ異常(3byte以外)。*/
+//#ifdef VHAL_SUPPORT_FAIL_SYSTEM	// HUD回転パラメータ通知(36h-45h)の通知サイズ異常(3byte以外)
 //		int32_t fail_ret{0};
 //		size_t data_size{0};
 //		bool fail{CVhalDebugSystem::GetInstance().CheckFailSystem("F-VHAL-N-XXX",fail_ret)};
@@ -387,8 +385,7 @@ void CVhalHudScreenReceiver::NotifyHudRotation(const std::vector<uint8_t>& data)
 //#endif
 		if ((hud_rotation_size_ + 1U) == data_size)
 		{
-//#ifdef VHAL_SUPPORT_FAIL_SYSTEM
-//			/* HUD回転パラメータ通知(36h-45h)のHUD回転角度フィールドに-2550～2550、0以外の値が設定。*/
+//#ifdef VHAL_SUPPORT_FAIL_SYSTEM	// HUD回転パラメータ通知(36h-45h)のHUD回転角度フィールドに-2550～2550、0以外の値が設定
 //			fail_ret = 0;
 //			uint16_t hud_rot_deg{0};
 //			bool fail{CVhalDebugSystem::GetInstance().CheckFailSystem("F-VHAL-N-XXX",fail_ret)};

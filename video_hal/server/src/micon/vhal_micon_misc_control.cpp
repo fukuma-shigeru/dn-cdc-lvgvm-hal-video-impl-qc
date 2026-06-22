@@ -837,8 +837,7 @@ bool CVhalMiconCommMiscControl::IsNotifyDisplayEnabled(const std::vector<uint8_t
 		/* HUD機能有無判定結果通知 (36h-43h)*/
 		else if (static_cast<uint8_t>(SUB_TYPE_DISP_HUD_FUNC_STATUS) == sub_type)
 		{
-//#ifdef VHAL_SUPPORT_FAIL_SYSTEM
-//			/* HUD機能有無判定結果通知(36h-43h)未受信。*/
+//#ifdef VHAL_SUPPORT_FAIL_SYSTEM // HUD機能有無判定結果通知(36h-43h)未受信
 //			int32_t value_hud_status{0};
 //			CVhalDebugSystem::GetInstance().UpdateFailData("F-VHAL-N-XXX", value_hud_status);
 //			if (0 != value_hud_status)
@@ -860,8 +859,7 @@ bool CVhalMiconCommMiscControl::IsNotifyDisplayEnabled(const std::vector<uint8_t
 		/* HUD歪み補正パラメータ通知 (36h-44h)*/
 		else if (static_cast<uint8_t>(SUB_TYPE_DISP_HUD_DISTORTION_CORRECTION) == sub_type)
 		{
-//#ifdef VHAL_SUPPORT_FAIL_SYSTEM
-//			/* HUD歪み補正パラメータ通知(36h-44h)未受信。*/
+//#ifdef VHAL_SUPPORT_FAIL_SYSTEM	// HUD歪み補正パラメータ通知(36h-44h)未受信。
 //			int32_t value_hud_correction{0};
 //			CVhalDebugSystem::GetInstance().UpdateFailData("F-VHAL-N-XXX", value_hud_correction);
 //			if (0 != value_hud_correction)
@@ -883,8 +881,7 @@ bool CVhalMiconCommMiscControl::IsNotifyDisplayEnabled(const std::vector<uint8_t
 		/* HUD回転パラメータ通知 (36h-45h)*/
 		else if (static_cast<uint8_t>(SUB_TYPE_DISP_HUD_ROTATION) == sub_type)
 		{
-//#ifdef VHAL_SUPPORT_FAIL_SYSTEM
-//			/* HUD回転パラメータ通知(36h-45h)未受信。*/
+//#ifdef VHAL_SUPPORT_FAIL_SYSTEM	// HUD回転パラメータ通知(36h-45h)未受信
 //			int32_t value_hud_rotation{0};
 //			CVhalDebugSystem::GetInstance().UpdateFailData("F-VHAL-N-XXX", value_hud_rotation);
 //			if (0 != value_hud_rotation)
