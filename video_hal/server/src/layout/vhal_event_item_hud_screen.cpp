@@ -390,14 +390,14 @@ void CVhalHudScreenReceiver::NotifyHudRotation(const std::vector<uint8_t>& data)
 //#ifdef VHAL_SUPPORT_FAIL_SYSTEM
 //			/* HUD回転パラメータ通知(36h-45h)のHUD回転角度フィールドに-2550～2550、0以外の値が設定。*/
 //			fail_ret = 0;
-//			int16_t hud_rot_deg{0};
+//			uint16_t hud_rot_deg{0};
 //			bool fail{CVhalDebugSystem::GetInstance().CheckFailSystem("F-VHAL-N-XXX",fail_ret)};
 //			if(true == fail)
 //			{
 //				hud_rot_deg = static_cast<int16_t>(fail_ret);
 //			}
 //#else
-			const int16_t hud_rot_deg{static_cast<int16_t>(AssembleLe16(data, 1U))};	/* HUD回転角度(単位:Deg LSB:0.01) */
+			const uint16_t hud_rot_deg{AssembleLe16(data, 1U)};	/* HUD回転角度(単位:Deg LSB:0.01) */
 //#endif
 			p_hud_screen_controller_->ApplyHudRotation(hud_rot_deg);
 		}

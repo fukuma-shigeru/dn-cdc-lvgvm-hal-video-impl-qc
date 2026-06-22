@@ -187,10 +187,10 @@ void CVhalHudScreenController::ApplyHudDistortionCorrection(const wlrenderer::Hu
 
 /*****************************************************************************
  処理概要：	HUD回転パラメータ設定
- 引数    ：	const int16_t rot_deg	(i)	HUD回転角度(単位:Deg LSB:0.01)	
+ 引数    ：	const uint16_t rot_deg	(i)	HUD回転角度(単位:Deg LSB:0.01)	
  戻り値  ：	なし
 *****************************************************************************/
-void CVhalHudScreenController::ApplyHudRotation(const int16_t rot_deg) noexcept
+void CVhalHudScreenController::ApplyHudRotation(const uint16_t rot_deg) noexcept
 {
 	VHAL_LOGV_IN();
 
@@ -387,7 +387,7 @@ int32_t CVhalHudScreenController::SetStoredHudParametersToWaylandPlugin(void) no
 			/* 保持済みのHUD回転パラメータがあれば、Waylandプラグインに設定 */
 			if (true == hud_rotation_.HasRotation())
 			{
-				const int16_t rotation{hud_rotation_.GetRotation()};
+				const uint16_t rotation{hud_rotation_.GetRotation()};
 				ret	= p_renderer_->SetHudRotation(rotation);
 				if (WL_RENDERER_SUCCESS != ret)
 				{

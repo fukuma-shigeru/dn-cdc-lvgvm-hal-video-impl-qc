@@ -36,7 +36,7 @@ public:
 	/* HUD歪み補正パラメータ設定 */
 	void ApplyHudDistortionCorrection(const wlrenderer::HudDistortionCorrection& corrections, const bool black) noexcept;
 	/* HUD回転パラメータ設定 */
-	void ApplyHudRotation(const int16_t rot_deg) noexcept;
+	void ApplyHudRotation(const uint16_t rot_deg) noexcept;
 
 private:
 	CVhalLayoutManager* p_layout_{nullptr};
@@ -82,7 +82,7 @@ private:
 	/* HUD回転パラメータ保持用構造体 */
 	class HudRotationState {
 	private:
-		int16_t value{};
+		uint16_t value{};
 		bool valid{false};
 
 	public:
@@ -91,12 +91,12 @@ private:
 			value = 0;
 			valid = false;
 		}
-		void SetRotation(const int16_t hud_rot_deg) noexcept
+		void SetRotation(const uint16_t hud_rot_deg) noexcept
 		{
 			value = hud_rot_deg;
 			valid = true;
 		}
-		int16_t GetRotation(void) const noexcept
+		uint16_t GetRotation(void) const noexcept
 		{
 			return value;
 		}
