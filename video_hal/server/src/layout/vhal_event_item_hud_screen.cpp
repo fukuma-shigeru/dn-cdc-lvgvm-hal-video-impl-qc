@@ -257,7 +257,7 @@ void CVhalHudScreenReceiver::NotifyHudDistortionCorrection(const std::vector<uin
 			/* 黒画表示要求なしの場合 */
 			if (static_cast<uint8_t>(HudBlackRequest::no_black) == black_screen_req_raw)
 			{
-				wlrenderer::HudDistortionCorrection corrections{};
+				wlrenderer::HudDistortionCorrection corrections{wlrenderer::HudDistortionCorrection()};
 				size_t parse_index{1U};	/* データは opcode の次（index 1）から開始 */
 				/* HUDタイプ */
 //#ifdef VHAL_SUPPORT_FAIL_SYSTEM	// HUD歪み補正パラメータ通知(36h-44h)の黒画表示要求フィールドが"黒画表示要求なしで、フィールドにreserved値、未確定値、無効値が設定
@@ -298,25 +298,25 @@ void CVhalHudScreenReceiver::NotifyHudDistortionCorrection(const std::vector<uin
 				/* 画像標準値 x座標 point 1～15 */
 				for (size_t i{0U}; i < wlrenderer::kHudCoordinates; ++i)
 				{
-					corrections.gv_vipos_basept_x[i] = AssembleLe16(data, i + parse_index);
+					corrections.gv_vipos_basept_x[i] = AssembleLe16(data, i + parse_index + (i * 2U));
 				}
-				parse_index += wlrenderer::kHudCoordinates;
+				parse_index += (wlrenderer::kHudCoordinates * 2U);
 				/* 画像標準値 y座標 point 1～15 */
 				for (size_t i{0U}; i < wlrenderer::kHudCoordinates; ++i)
 				{
-					corrections.gv_vipos_basept_y[i] = AssembleLe16(data, i + parse_index);
+					corrections.gv_vipos_basept_y[i] = AssembleLe16(data, i + parse_index + (i * 2U));
 				}
-				parse_index += wlrenderer::kHudCoordinates;
+				parse_index += (wlrenderer::kHudCoordinates * 2U);
 				/* 画像補正値 x座標 point 1～15 */
 				for (size_t i{0U}; i < wlrenderer::kHudCoordinates; ++i)
 				{
-					corrections.gv_vipos_adjpt_x[i] = AssembleLe16(data, i + parse_index);
+					corrections.gv_vipos_adjpt_x[i] = AssembleLe16(data, i + parse_index + (i * 2U));
 				}
+				parse_index += (wlrenderer::kHudCoordinates * 2U);
 				/* 画像補正値 y座標 point 1～15 */
-				parse_index += wlrenderer::kHudCoordinates;
 				for (size_t i{0U}; i < wlrenderer::kHudCoordinates; ++i)
 				{
-					corrections.gv_vipos_adjpt_y[i] = AssembleLe16(data, i + parse_index);
+					corrections.gv_vipos_adjpt_y[i] = AssembleLe16(data, i + parse_index + (i * 2U));
 				}
 
 				/* HUD歪み補正パラメータ設定 */
@@ -325,14 +325,14 @@ void CVhalHudScreenReceiver::NotifyHudDistortionCorrection(const std::vector<uin
 			/* 黒画表示要求ありの場合 */
 			else if (static_cast<uint8_t>(HudBlackRequest::black) == black_screen_req_raw)
 			{
-				constexpr wlrenderer::HudDistortionCorrection corrections{};
+				constexpr wlrenderer::HudDistortionCorrection corrections{wlrenderer::HudDistortionCorrection()};
 				p_hud_screen_controller_->ApplyHudDistortionCorrection(corrections, true);
 			}
 			/* 無効値の場合はHUD黒画要求を有効にする */
 			else
 			{
 				VHAL_LOGE("unknown black_screen_req. black_screen_req=0x%02X", static_cast<uint32_t>(black_screen_req_raw));
-				constexpr wlrenderer::HudDistortionCorrection corrections{};
+				constexpr wlrenderer::HudDistortionCorrection corrections{wlrenderer::HudDistortionCorrection()};
 				p_hud_screen_controller_->ApplyHudDistortionCorrection(corrections, true);
 			}
 		}
