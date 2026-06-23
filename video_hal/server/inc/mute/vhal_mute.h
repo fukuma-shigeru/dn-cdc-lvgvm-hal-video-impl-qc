@@ -158,7 +158,7 @@ private:
 	void NotifyCameraChanged(const int32_t result);
 
 	/* HUDディスプレイ全体のMUTE用のWaylandRendererVideo作成 */
-	wlrenderer::CWaylandRendererVideo* CreateHudBlinder(const VhalBlinderType blinder_hud, const int32_t blinder_color, const bool mute_init, wlrenderer::CWaylandRenderer * const p_renderer) noexcept;
+	wlrenderer::CWaylandRendererVideo* CreateHudBlinder(const VhalBlinderType blinder_hud, const int32_t blinder_color, const bool mute_init, wlrenderer::CWaylandRenderer * const p_rend) noexcept;
 };
 
 extern "C" void MuteReleaseMuteCameraOn(void* const arg);

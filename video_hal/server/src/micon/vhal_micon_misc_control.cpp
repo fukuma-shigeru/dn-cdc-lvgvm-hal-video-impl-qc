@@ -795,7 +795,7 @@ bool CVhalMiconCommMiscControl::IsNotifyEnabled(const uint32_t data_size, const 
 }
 /*****************************************************************************
  処理概要：	通知イベント有効判定
- 引数    ：	const std::vector<uint8_t> cmd	(i)受信データ
+ 引数    ：	std::vector<uint8_t>& cmd	(i)受信データ
  戻り値  ：	判定結果
            		true	通知有効
            		false	通知無効
@@ -804,16 +804,16 @@ bool CVhalMiconCommMiscControl::IsNotifyEnabled(const uint32_t data_size, const 
                     	F-VHAL-N-XXX
                     	F-VHAL-N-XXX
 *****************************************************************************/
-bool CVhalMiconCommMiscControl::IsNotifyDisplayEnabled(const std::vector<uint8_t> cmd)
+bool CVhalMiconCommMiscControl::IsNotifyDisplayEnabled(std::vector<uint8_t>& cmd)
 {
 	bool result{true};
 
 	if (false == cmd.empty())
 	{
-		const uint8_t	sub_type{cmd[0]};
+		const uint8_t	sub_type{static_cast<uint8_t>(cmd[0])};
 
 		/* 画質モード応答 (36h-02h) */
-		if (SUB_TYPE_DISP_MODE_RSP == sub_type)
+		if (static_cast<uint8_t>(SUB_TYPE_DISP_MODE_RSP) == sub_type)
 		{
 			/* 前回と内容同じならば通知対象外 */
 			if (cmd == cmd_dispmode_resp_)
@@ -899,6 +899,10 @@ bool CVhalMiconCommMiscControl::IsNotifyDisplayEnabled(const std::vector<uint8_t
 				cmd_disp_hud_rotation_ = std::move(cmd);
 			}
 //#endif
+		}
+		else
+		{
+			VHAL_LOGW("sub_type is not supported. sub_type=0x%02X", sub_type);
 		}
 	}
 	else

@@ -296,35 +296,27 @@ void CVhalHudScreenReceiver::NotifyHudDistortionCorrection(const std::vector<uin
 				corrections.gv_vipos_avail_width = AssembleLe16(data, parse_index);
 				parse_index += 2U;
 				/* 画像標準値 x座標 point 1～15 */
-				size_t w_idx{parse_index};		/* CERT INT30-C対策 */
 				for (size_t i{0U}; i < wlrenderer::kHudCoordinates; ++i)
 				{
-					corrections.gv_vipos_basept_x[i] = AssembleLe16(data, w_idx);
-					w_idx += 2U;
+					corrections.gv_vipos_basept_x[i] = AssembleLe16(data, i + parse_index);
 				}
 				parse_index += wlrenderer::kHudCoordinates;
-				w_idx = parse_index;			/* CERT INT30-C対策 */
 				/* 画像標準値 y座標 point 1～15 */
 				for (size_t i{0U}; i < wlrenderer::kHudCoordinates; ++i)
 				{
-					corrections.gv_vipos_basept_y[i] = AssembleLe16(data, w_idx);
-					w_idx += 2U;
+					corrections.gv_vipos_basept_y[i] = AssembleLe16(data, i + parse_index);
 				}
 				parse_index += wlrenderer::kHudCoordinates;
-				w_idx = parse_index;			/* CERT INT30-C対策 */
 				/* 画像補正値 x座標 point 1～15 */
 				for (size_t i{0U}; i < wlrenderer::kHudCoordinates; ++i)
 				{
-					corrections.gv_vipos_adjpt_x[i] = AssembleLe16(data, w_idx);
-					w_idx += 2U;
+					corrections.gv_vipos_adjpt_x[i] = AssembleLe16(data, i + parse_index);
 				}
 				/* 画像補正値 y座標 point 1～15 */
 				parse_index += wlrenderer::kHudCoordinates;
-				w_idx = parse_index;			/* CERT INT30-C対策 */
 				for (size_t i{0U}; i < wlrenderer::kHudCoordinates; ++i)
 				{
-					corrections.gv_vipos_adjpt_y[i] = AssembleLe16(data, w_idx);
-					w_idx += 2U;
+					corrections.gv_vipos_adjpt_y[i] = AssembleLe16(data, i + parse_index);
 				}
 
 				/* HUD歪み補正パラメータ設定 */

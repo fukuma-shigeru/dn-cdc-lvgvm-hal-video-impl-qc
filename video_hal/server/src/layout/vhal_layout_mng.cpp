@@ -3776,7 +3776,7 @@ bool CVhalLayoutManager::IsHudScreenAvailable(void) const
 	bool available{false};
 
 	/* レイアウト情報からHUD スクリーンID取得 */
-	int32_t ret{GetScreenIdHud(screen_id_hud)};
+	const int32_t ret{GetScreenIdHud(screen_id_hud)};
 	if (VHAL_SUCCESS == ret)
 	{
 		/* スクリーン有効判定 */

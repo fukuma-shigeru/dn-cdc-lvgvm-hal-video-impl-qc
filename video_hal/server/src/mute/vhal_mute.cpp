@@ -399,13 +399,12 @@ int32_t CVhalMute::Initialize(CVhalMainControl * const p_main_control, CVhalLayo
  引数    ：	const VhalBlinderType blinder_hud				(i)HUDのブラインダー種別
 		   	const int32_t blinder_color						(i)ブラインダーの色
 		   	const bool mute_init							(i)true MUTE有効/false MUTE無効
-		   	wlrenderer::CWaylandRenderer * const p_renderer	(i)WaylandRendererインスタンスポインタ
+		   	wlrenderer::CWaylandRenderer * const p_rend		(i)WaylandRendererインスタンスポインタ
  戻り値  ：	処理結果
  戻り値  ：	CWaylandRendererVideoインスタンスポインタ
 *****************************************************************************/
-wlrenderer::CWaylandRendererVideo* CVhalMute::CreateHudBlinder(const VhalBlinderType blinder_hud, const int32_t blinder_color, const bool mute_init, wlrenderer::CWaylandRenderer * const p_renderer) noexcept
+wlrenderer::CWaylandRendererVideo* CVhalMute::CreateHudBlinder(const VhalBlinderType blinder_hud, const int32_t blinder_color, const bool mute_init, wlrenderer::CWaylandRenderer * const p_rend) noexcept
 {
-	int32_t screen_id_hud{-1};
 	int32_t ret{VHAL_SUCCESS};
 	wlrenderer::CWaylandRendererVideo *p_blinder{nullptr};
 
@@ -417,6 +416,7 @@ wlrenderer::CWaylandRendererVideo* CVhalMute::CreateHudBlinder(const VhalBlinder
 
 	if (VHAL_SUCCESS == ret)
 	{
+		int32_t screen_id_hud{-1};
 		/* HUDのスクリーンID取得 */
 		if (VHAL_SUCCESS == p_layout_mng_->GetScreenIdHud(screen_id_hud))
 		{
@@ -437,7 +437,7 @@ wlrenderer::CWaylandRendererVideo* CVhalMute::CreateHudBlinder(const VhalBlinder
 				{
 					p_blinder_config_->AddSurfaceId(ivi_id_hud);
 					/* Videoインスタンスの作成 */
-					p_blinder = p_renderer_->CreateRendererVideo(*p_blinder_config_);
+					p_blinder = p_rend->CreateRendererVideo(*p_blinder_config_);
 					if (nullptr ==  p_blinder)
 					{
 						VHAL_LOGW("CreateClientVideo(blinder_display_hud) error.");
@@ -449,7 +449,7 @@ wlrenderer::CWaylandRendererVideo* CVhalMute::CreateHudBlinder(const VhalBlinder
 						if (VHAL_SUCCESS != ret)
 						{
 							/* Videoインスタンスの除去 */
-							p_renderer_->RemoveRendererVideo(p_blinder);
+							p_rend->RemoveRendererVideo(p_blinder);
 							p_blinder = nullptr;
 							VHAL_LOGW("InitBlinder error. ret=%d", ret);
 						}
