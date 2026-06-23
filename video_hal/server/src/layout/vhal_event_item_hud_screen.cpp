@@ -264,7 +264,7 @@ void CVhalHudScreenReceiver::NotifyHudDistortionCorrection(const std::vector<uin
 //				fail_ret = 0;
 //				uint8_t black_screen_req_raw{0};
 //				bool fail{CVhalDebugSystem::GetInstance().CheckFailSystem("F-VHAL-N-XXX",fail_ret)};
-//				if(true == fail//				{
+//				if(true == fail) {
 //					corrections.gv_sys_hud_type = 0b1111;
 //				}
 //#else
