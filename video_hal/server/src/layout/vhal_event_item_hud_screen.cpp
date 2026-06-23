@@ -151,7 +151,7 @@ void CVhalHudScreenReceiver::NotifyHudFunctionStatus(const std::vector<uint8_t>&
 	if (nullptr != p_hud_screen_controller_)
 	{
 		/* 受信データサイズの確認 */
-//#ifdef VHAL_SUPPORT_FAIL_SYSTEM
+//#ifdef VHAL_SUPPORT_FAIL_SYSTEM	// HUD機能有無判定結果通知(36h-43h)の通知サイズ異常(2byte以外)
 //		int32_t fail_ret{0};
 //		size_t data_size{0};
 //		bool fail{CVhalDebugSystem::GetInstance().CheckFailSystem("F-VHAL-N-XXX",fail_ret)};
@@ -169,7 +169,7 @@ void CVhalHudScreenReceiver::NotifyHudFunctionStatus(const std::vector<uint8_t>&
 				func = 0x01U,
 			};
 			/* HUD機能有無判定結果(0：機能無 1：機能有) */
-//#ifdef VHAL_SUPPORT_FAIL_SYSTEM
+//#ifdef VHAL_SUPPORT_FAIL_SYSTEM	// HUD機能有無判定結果通知(36h-43h)のHUD機能有無判定結果フィールド値が機能無、機能有以外
 //			fail_ret = 0;
 //			uint8_t hud_func_raw{0};
 //			bool fail{CVhalDebugSystem::GetInstance().CheckFailSystem("F-VHAL-N-XXX",fail_ret)};
